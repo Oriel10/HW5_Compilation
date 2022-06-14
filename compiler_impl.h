@@ -53,6 +53,7 @@ struct Node{
 };
 
 void startCompiler();
+void endCompiler();
 
 void openScope();
 

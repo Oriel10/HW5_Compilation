@@ -3,3 +3,4 @@ lex.yy.c
 *.tab.*pp
 tests/*.mine
 tests.sh
+log.txt

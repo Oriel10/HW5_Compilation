@@ -101,6 +101,12 @@ void startCompiler()
     PLOGI << "Start compiler";
 }
 
+void endCompiler()
+{
+    closeScope();
+    PLOGI << "End compiler";
+}
+
 
 void openScope()
 {   
@@ -136,12 +142,9 @@ void closeScope()
             ERROR(output::errorMainMissing());    
         }
     }
-
-    output::endScope();
     assert(tables_stack.size());
     assert(offsets_stack.size());
     const auto& table = tables_stack.back();
-    table.print();
     tables_stack.pop_back();
     offsets_stack.pop_back();
 }

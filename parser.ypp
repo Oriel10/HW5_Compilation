@@ -59,7 +59,7 @@
 %%
 
 Program :
-        {openScope();} Funcs                   {closeScope(); }
+        {startCompiler();} Funcs               {endCompiler();                 }
 ;
 
 Funcs :
