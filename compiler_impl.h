@@ -57,7 +57,6 @@ void endCompiler();
 
 void openScope();
 
-// void closeScope(bool exit_loop = false);
 void closeScope();
 
 const SymbolTableEntry* findIdentifier(const string& name);
