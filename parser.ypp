@@ -1,7 +1,7 @@
 %{
-    #include <iostream>
-    #include "classes.h"
-    #include "hw3_output.hpp"
+    #include <iostream> //TODO: remove
+    #include "compiler_impl.h"
+    #include "error_output.hpp"
     using namespace std;
     extern void closeScope();
 
@@ -59,162 +59,111 @@
 %%
 
 Program :
-        {openScope();} Funcs                    {/*output::printProductionRule(1);*/
-                                                 closeScope(); }
+        {openScope();} Funcs                   {closeScope(); }
 ;
 
 Funcs :
-        /*epsilon*/                            {/*output::printProductionRule(2);*/
-                                                $$ = new Funcs();              }
-    |   FuncDecl Funcs                         {/*output::printProductionRule(3);*/
-                                                $$ = new Funcs();              }
+        /*epsilon*/                            {$$ = new Funcs();              }
+    |   FuncDecl Funcs                         {$$ = new Funcs();              }
 ; 
 
 FuncDecl :
         RetType ID LPAREN Formals RPAREN LBRACE
         {$$ = new FuncDecl(dynamic_cast<RetType*>($1), $2, dynamic_cast<Formals*>($4));} 
-        Statements RBRACE                      {/*output::printProductionRule(4);*/
-                                                closeScope();                   }
+        Statements RBRACE                      {closeScope();                   }
 ;
 
 RetType :
-        Type                                   {/*output::printProductionRule(5);*/
-                                                $$ = new RetType(dynamic_cast<Type*>($1));}
-    |   VOID                                   {/*output::printProductionRule(6);*/
-                                                $$ = new RetType($1);              }
+        Type                                   {$$ = new RetType(dynamic_cast<Type*>($1));}
+    |   VOID                                   {$$ = new RetType($1);              }
 ;
 
 Formals :
-        /*epsilon*/                            {/*output::printProductionRule(7);*/
-                                                $$ = new Formals();             }        
-    |   FormalsList                            {/*output::printProductionRule(8);*/
-                                                $$ = new Formals(dynamic_cast<FormalsList*>($1));}
+        /*epsilon*/                            {$$ = new Formals();             }        
+    |   FormalsList                            {$$ = new Formals(dynamic_cast<FormalsList*>($1));}
 
 FormalsList :
-        FormalDecl                             {/*output::printProductionRule(9);*/
-                                                $$ = new FormalsList(dynamic_cast<FormalDecl*>($1));       }
-    |   FormalDecl COMMA FormalsList           {/*output::printProductionRule(10);*/
-                                                $$ = new FormalsList(dynamic_cast<FormalDecl*>($1), dynamic_cast<FormalsList*>($3));    }
+        FormalDecl                             {$$ = new FormalsList(dynamic_cast<FormalDecl*>($1));       }
+    |   FormalDecl COMMA FormalsList           {$$ = new FormalsList(dynamic_cast<FormalDecl*>($1), dynamic_cast<FormalsList*>($3));    }
 ;
 
 FormalDecl :
-        Type ID                                {/*output::printProductionRule(11);*/
-                                                $$ = new FormalDecl(dynamic_cast<Type*>($1), $2);    }
+        Type ID                                {$$ = new FormalDecl(dynamic_cast<Type*>($1), $2);    }
 ;
 
 Statements :
-        Statement                              {/*output::printProductionRule(12);*/
-                                                $$ = new Statements();             }
-    |   Statements Statement                   {/*output::printProductionRule(13);*/
-                                                $$ = new Statements();             }
+        Statement                              {$$ = new Statements();             }
+    |   Statements Statement                   {$$ = new Statements();             }
 ;
 
 Statement :
-        LBRACE M Statements RBRACE             {/*output::printProductionRule(14);*/
-                                                $$ = new Statement();
+        LBRACE M Statements RBRACE             {$$ = new Statement();
                                                 closeScope();                   }
-    |   Type ID SC                             {/*output::printProductionRule(15);*/
-                                                $$ = new Statement(dynamic_cast<Type*>($1), $2);}
-    |   Type ID ASSIGN Exp SC                  {/*output::printProductionRule(16);*/ 
-                                                $$ = new Statement(dynamic_cast<Type*>($1), $2, dynamic_cast<Exp*>($4));}
-    |   AUTO ID ASSIGN Exp SC                  {/*output::printProductionRule(17);*/
-                                                $$ = new Statement($1, $2, dynamic_cast<Exp*>($4));}
-    |   ID ASSIGN Exp SC                       {/*output::printProductionRule(18);*/
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3));}
-    |   Call SC                                {/*output::printProductionRule(19);*/
-                                                $$ = new Statement(dynamic_cast<Call*>($1));           }
-    |   RETURN SC                              {/*output::printProductionRule(20);*/
-                                                $$ = new Statement($1);         }
-    |   RETURN Exp SC                          {/*output::printProductionRule(21);*/
-                                                $$ = new Statement(dynamic_cast<Exp*>($2));}
+    |   Type ID SC                             {$$ = new Statement(dynamic_cast<Type*>($1), $2);}
+    |   Type ID ASSIGN Exp SC                  {$$ = new Statement(dynamic_cast<Type*>($1), $2, dynamic_cast<Exp*>($4));}
+    |   AUTO ID ASSIGN Exp SC                  {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4));}
+    |   ID ASSIGN Exp SC                       {$$ = new Statement($1, dynamic_cast<Exp*>($3));}
+    |   Call SC                                {$$ = new Statement(dynamic_cast<Call*>($1));           }
+    |   RETURN SC                              {$$ = new Statement($1);         }
+    |   RETURN Exp SC                          {$$ = new Statement(dynamic_cast<Exp*>($2));}
     |   IF LPAREN Exp RPAREN M 
-        Statement %prec IF                     {/*output::printProductionRule(22);*/
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
+        Statement %prec IF                     {$$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
                                                 closeScope();                   }
     |   IF LPAREN Exp RPAREN M 
-        Statement ELSE M2 Statement            {/*output::printProductionRule(23);*/
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
+        Statement ELSE M2 Statement            {$$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
                                                 closeScope();}
     |   WHILE LPAREN Exp RPAREN 
         {openScope(); loop_counter++;}
-        Statement                              {/*output::printProductionRule(24);*/
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
+        Statement                              {$$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
                                                 closeScope(); loop_counter--;   }
-    |   BREAK SC                               {/*output::printProductionRule(25);*/
-                                                $$ = new Statement($1);         }
-    |   CONTINUE SC                            {/*output::printProductionRule(26);*/
-                                                $$ = new Statement($1);         }                                 
+    |   BREAK SC                               {$$ = new Statement($1);         }
+    |   CONTINUE SC                            {$$ = new Statement($1);         }                                 
 ;
 
 M :
-        /*epsilon*/                            {/*output::printProductionRule(48);*/ 
-                                                openScope();                   };
+        /*epsilon*/                            {openScope();                   };
 ;
 
 M2 :
-        /*epsilon*/                            {/*output::printProductionRule(49);*/ 
-                                                closeScope();                   
+        /*epsilon*/                            {closeScope();                   
                                                 openScope();                     }
 ;
 
 
 Call :
-        ID LPAREN ExpList RPAREN               {/*output::printProductionRule(27);*/
-                                                $$ = new Call($1, dynamic_cast<ExpList*>($3));}
-    |   ID LPAREN RPAREN                       {/*output::printProductionRule(28);*/
-                                                $$ = new Call($1);                   }
+        ID LPAREN ExpList RPAREN               {$$ = new Call($1, dynamic_cast<ExpList*>($3));}
+    |   ID LPAREN RPAREN                       {$$ = new Call($1);                   }
 ;
 
 ExpList :
-        Exp                                    {/*output::printProductionRule(29);*/
-                                                $$ = new ExpList(dynamic_cast<Exp*>($1));}
-    |   Exp COMMA ExpList                      {/*output::printProductionRule(30);*/
-                                                $$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<ExpList*>($3));}
+        Exp                                    {$$ = new ExpList(dynamic_cast<Exp*>($1));}
+    |   Exp COMMA ExpList                      {$$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<ExpList*>($3));}
 ;
 
 Type :
-        INT                                    {/*output::printProductionRule(31);*/
-                                                $$ = new Type($1);              }
-    |   BYTE                                   {/*output::printProductionRule(32);*/
-                                                $$ = new Type($1);              }
-    |   BOOL                                   {/*output::printProductionRule(33);*/
-                                                $$ = new Type($1);              }
+        INT                                    {$$ = new Type($1);              }
+    |   BYTE                                   {$$ = new Type($1);              }
+    |   BOOL                                   {$$ = new Type($1);              }
 ;
 
 Exp :
-        LPAREN Exp RPAREN                      {/*output::printProductionRule(34);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($2));}
-    |   Exp BINOP_MULDIV Exp                   {/*output::printProductionRule(35);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp BINOP_PLUSMINUS Exp                {/*output::printProductionRule(35);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   ID                                     {/*output::printProductionRule(36);*/
-                                                $$ = new Exp(($1));                 }
-    |   Call                                   {/*output::printProductionRule(37);*/
-                                                $$ = new Exp(dynamic_cast<Call*>($1));}
-    |   NUM                                    {/*output::printProductionRule(38);*/
-                                                $$ = new Exp($1);                   }
-    |   NUM B                                  {/*output::printProductionRule(39);*/
-                                                $$ = new Exp($1, $2);               }
-    |   STRING                                 {/*output::printProductionRule(40);*/
-                                                $$ = new Exp($1);                   }
-    |   TRUE                                   {/*output::printProductionRule(41);*/
-                                                $$ = new Exp($1);                   }
-    |   FALSE                                  {/*output::printProductionRule(42);*/
-                                                $$ = new Exp($1);                   }
-    |   NOT Exp                                {/*output::printProductionRule(43);*/
-                                                $$ = new Exp($1, dynamic_cast<Exp*>($2));}
-    |   Exp AND Exp                            {/*output::printProductionRule(44);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp OR Exp                             {/*output::printProductionRule(45);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp RELOP_EQ Exp                       {/*output::printProductionRule(46);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp RELOP_SIZE Exp                     {/*output::printProductionRule(46);*/
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+        LPAREN Exp RPAREN                      {$$ = new Exp(dynamic_cast<Exp*>($2));}
+    |   Exp BINOP_MULDIV Exp                   {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp BINOP_PLUSMINUS Exp                {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   ID                                     {$$ = new Exp(($1));                 }
+    |   Call                                   {$$ = new Exp(dynamic_cast<Call*>($1));}
+    |   NUM                                    {$$ = new Exp($1);                   }
+    |   NUM B                                  {$$ = new Exp($1, $2);               }
+    |   STRING                                 {$$ = new Exp($1);                   }
+    |   TRUE                                   {$$ = new Exp($1);                   }
+    |   FALSE                                  {$$ = new Exp($1);                   }
+    |   NOT Exp                                {$$ = new Exp($1, dynamic_cast<Exp*>($2));}
+    |   Exp AND Exp                            {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp OR Exp                             {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp RELOP_EQ Exp                       {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp RELOP_SIZE Exp                     {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
     |   LPAREN Type RPAREN
-         Exp %prec CAST_PREC                   {/*output::printProductionRule(47);*/
-                                                $$ = new Exp(dynamic_cast<Type*>($2), dynamic_cast<Exp*>($4));}
+         Exp %prec CAST_PREC                   {$$ = new Exp(dynamic_cast<Type*>($2), dynamic_cast<Exp*>($4));}
 ;
 
 %%

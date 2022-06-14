@@ -1,0 +1,5 @@
+hw5
+lex.yy.c
+*.tab.*pp
+tests/*.mine
+tests.sh

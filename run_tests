@@ -1,0 +1,19 @@
+
+echo "--------------- Running Tests ---------------"
+for file in `ls tests/ | grep in | cut -d"." -f1`; 
+do
+
+	./hw5 < tests/${file}.in > tests/${file}.mine
+	DIFF=$(diff tests/$file.mine tests/${file}.out)
+		
+	if [ "$DIFF" == "" ] 
+	then
+		echo "-- Test $file passed :D --"
+	else
+		echo "-- Test $file FAILED :'( --"
+		echo ">>>our output<<<: "
+		diff tests/$file tests/${file}.out
+		echo ">>>test output<<<: "
+		break
+	fi
+done
