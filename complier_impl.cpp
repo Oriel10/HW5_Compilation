@@ -2,6 +2,9 @@
 #include "error_output.hpp"
 #include <map>
 #include <assert.h>
+#include "plog/include/plog/Log.h"
+#include "plog/include/plog/Initializers/RollingFileInitializer.h"
+
 
 #define ASSERT_ARG(arg) assert(arg!=nullptr)
 #define ASSERT_2ARGS(arg1, arg2) assert(arg1!=nullptr); assert(arg2!=nullptr)
@@ -89,6 +92,15 @@ void SymbolTable::addArgEntry (const string& name, type_t type, int offset)
 {
     m_entries.push_back(SymbolTableEntry(name, type, offset, symbol_type_t::ARG));    
 }
+
+void startCompiler()
+{
+    std::remove("log.txt");
+    plog::init(plog::debug, "log.txt");
+    openScope();
+    PLOGI << "Start compiler";
+}
+
 
 void openScope()
 {   

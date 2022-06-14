@@ -52,7 +52,8 @@ struct Node{
     virtual ~Node() {};
 };
 
-// void openScope(bool enter_loop = false);
+void startCompiler();
+
 void openScope();
 
 // void closeScope(bool exit_loop = false);
