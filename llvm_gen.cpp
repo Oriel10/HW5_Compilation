@@ -5,7 +5,7 @@
 #include "plog/include/plog/Log.h"
 
 
-llvmGen::llvmGen(): m_reg_num(0)
+llvmGen::llvmGen(): m_reg_num(0), m_indentation(0)
 {
     m_cb = &(CodeBuffer::instance());
 }
@@ -16,7 +16,16 @@ llvmGen::llvmGen(): m_reg_num(0)
 // 	return inst;
 // }
 
-std::string llvmGen::genRegister(){
+std::string llvmGen::getIdentation()
+{
+    std::string res = "";
+    for (size_t i=0; i < m_indentation; i++){
+        res += "\t";
+    }
+    return res;
+}
+
+std::string llvmGen::getFreshRegister(){
     std::string res_reg = "%var";
     res_reg += std::to_string(m_reg_num++);
     return res_reg;
@@ -50,17 +59,28 @@ void llvmGen::genFuncDecl(type_t retType, const std::string& funcName, std::vect
               types.end(),
               std::experimental::make_ostream_joiner(sperated_args_list,", "));
     
-    m_cb->emitGlobal("declare " + ret_type + " @"  + funcName + "(" + sperated_args_list.str() + ")");
+    m_cb->emit("define " + ret_type + " @"  + funcName + "(" + sperated_args_list.str() + ") {");
 }
 
 void llvmGen::genInitialFuncs() const
 {
     PLOGI << "Generating intial functions";
     m_cb->emitGlobal("declare i32 @printf(i8*, ...)");
-    genFuncDecl(type_t::VOID_T, "exit", std::vector<type_t>{type_t::INT_T});
+    m_cb->emitGlobal("declare i32 @printf(i8*, ...)");
     m_cb->emitGlobal("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
     m_cb->emitGlobal("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
-    
+    m_cb->emit("");
     
 }
 
+void llvmGen::genAllocVar(std::string varName)
+{
+    PLOGI << "Generating alloca commad";
+    m_cb->emit("%" + varName + " = alloca i32");
+}
+
+void llvmGen::genStoreValInVar(std::string varName, size_t value)
+{
+    PLOGI << "Generating store command";
+    m_cb->emit("store i32 " +std::to_string(value) + ", i32* %" + varName);
+}

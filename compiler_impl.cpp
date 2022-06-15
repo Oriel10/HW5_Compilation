@@ -117,6 +117,7 @@ void endCompiler()
 
 void openScope()
 {   
+    //Semantic analasis
     //start of the program
     if(tables_stack.empty()){ 
         SymbolTable global;
@@ -196,6 +197,7 @@ FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
     ASSERT_3ARGS(ret_type, id, formals);
     vector<type_t> args;
 
+    // Semantic analasis
     for (const auto& elem : formals->m_formal_decls){
         auto type = elem->m_type;
         args.push_back(type);
@@ -210,9 +212,11 @@ FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
         const string& name = formals->m_formal_decls[i-1]->m_name;
         type_t type = formals->m_formal_decls[i-1]->m_type;
         int offset = -i;
-        // TODO: check if there is identifier with arg name
         tables_stack.back().addArgEntry(name, type, offset);
-    }    
+    }
+
+    // llvm generation
+    llvm_inst.genFuncDecl(ret_type->m_type, id->lexeme, args);  
 }
 
 // RetType -> Type
@@ -307,11 +311,15 @@ Call::Call(Node* func_id){
 Statement::Statement(Type* type, Node* id)
 {
     ASSERT_2ARGS(type, id);
+    // Semantic Analisis
     if(findIdentifier(id->lexeme)){
         ERROR(output::errorDef(id->lineno,id->lexeme));
     }
     assert(tables_stack.size());
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
+
+    //llvm generation
+    llvm_inst.genAllocVar(id->lexeme);
 }
 
 // Statement -> Type ID ASSIGN Exp SC 
