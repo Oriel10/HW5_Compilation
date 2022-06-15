@@ -2,7 +2,7 @@
 #define _LLVM_GEN_
 
 #include <string>
-#include "compiler_impl.h"
+#include "production_rules.h"
 #include "bp.hpp"
 
 class llvmGen
@@ -14,17 +14,20 @@ class llvmGen
 public: 
 
     llvmGen();
-    // static llvmGen& instance();27
+    static llvmGen& instance();
 
-    std::string getIdentation();
-    void updateIdentation(bool increase = true);
-
-    std::string getFreshRegister();
+    string getIdentation() const;
+    int llvmEmit(const string& str) const;
+    string getFreshRegister();
     void genInitialFuncs() const;
-    void genFuncDecl(type_t RetType, const std::string& funcName,
-                 std::vector<type_t> argsTypes) const; //TODO: add somehow pointers to args.
-    void genAllocVar(std::string varName);
-    void genStoreValInVar(std::string varName, size_t value);
+    void genFuncDecl(type_t RetType, const string& funcName,
+                 vector<type_t> argsTypes) const;
+    void genAllocVar();
+    void genStoreValInVar(string varName, size_t value);
+    void incIdentation();
+    void decIdentation();
+    void zeroIdentation();
+    void closeFunc();
 };
 
 

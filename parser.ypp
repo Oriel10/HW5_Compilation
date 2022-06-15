@@ -1,7 +1,9 @@
 %{
-    #include "compiler_impl.h"
+    #include "production_rules.h"
     #include "error_output.hpp"
     #include "plog/include/plog/Log.h"
+    #include "semantic_analizer.h"
+    #include "llvm_gen.hpp"
 
     using namespace std;
     using namespace output;
@@ -13,11 +15,10 @@
     extern char* yytext;
 
     extern int yylineno;
+    extern llvmGen& llvm_inst;
     int yylex();
     void yyerror(char const*);
 %}
-
-
 
 
 %token VOID
@@ -76,7 +77,8 @@ FuncDecl :
         RetType ID LPAREN Formals RPAREN LBRACE
         {$$ = new FuncDecl(dynamic_cast<RetType*>($1), $2, dynamic_cast<Formals*>($4));} 
         Statements RBRACE                      {PLOGD << prodRule(4);
-                                                closeScope();                   }
+                                                closeScope();
+                                                llvm_inst.closeFunc();       }
 ;
 
 RetType :
