@@ -134,6 +134,8 @@ void openScope()
     tables_stack.push_back(SymbolTable());
     assert(offsets_stack.size());
     offsets_stack.push_back(offsets_stack.back());
+
+    //llvm generation
 }
 
 void closeScope()
