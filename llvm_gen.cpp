@@ -3,6 +3,16 @@
 #include <iterator>
 #include <sstream>
 #include "plog/include/plog/Log.h"
+#include <map>
+
+std::map<type_t, std::string>
+ CFanToLlvmTypesMap = {
+    {type_t::INT_T, "i32"},
+    {type_t::BYTE_T, "i8" },
+    {type_t::BOOL_T, "i1"},
+    {type_t::VOID_T, "void"}
+};
+
 
 
 llvmGen::llvmGen(): m_reg_num(0), m_indentation(0)
@@ -66,11 +76,23 @@ void llvmGen::genInitialFuncs() const
 {
     PLOGI << "Generating intial functions";
     m_cb->emitGlobal("declare i32 @printf(i8*, ...)");
-    m_cb->emitGlobal("declare i32 @printf(i8*, ...)");
+    m_cb->emitGlobal("declare void @exit(i32)");
     m_cb->emitGlobal("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
     m_cb->emitGlobal("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
     m_cb->emit("");
     
+    m_cb->emit("define void @printi(i32) {");
+    m_cb->emit("%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0");
+    m_cb->emit("call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)");
+    m_cb->emit("ret void");
+    m_cb->emit("}");
+    m_cb->emit("");
+
+    m_cb->emit("define void @print(i8*) {");
+    m_cb->emit("%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0");
+    m_cb->emit("call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)");
+    m_cb->emit("ret void");
+    m_cb->emit("}");
 }
 
 void llvmGen::genAllocVar(std::string varName)
