@@ -10,6 +10,10 @@ using namespace std;
 #define ERROR(function) function; exit(0)
 
 namespace output{
+
+    std::string prodRule(const int ruleno);
+    extern const std::string rules[];
+
     void endScope();
     void printID(const string& id, int offset, const string& type);
     

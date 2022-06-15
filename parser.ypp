@@ -1,8 +1,10 @@
 %{
-    #include <iostream> //TODO: remove
     #include "compiler_impl.h"
     #include "error_output.hpp"
+    #include "plog/include/plog/Log.h"
+
     using namespace std;
+    using namespace output;
     extern void closeScope();
 
     extern stack<SymbolTable> tables_stack;
@@ -59,111 +61,162 @@
 %%
 
 Program :
-        {startCompiler();} Funcs               {endCompiler();                 }
+        {startCompiler();} Funcs               {PLOGD << prodRule(1);
+                                                endCompiler();                 }
 ;
 
 Funcs :
-        /*epsilon*/                            {$$ = new Funcs();              }
-    |   FuncDecl Funcs                         {$$ = new Funcs();              }
+        /*epsilon*/                            {PLOGD << prodRule(2);
+                                                $$ = new Funcs();              }
+    |   FuncDecl Funcs                         {PLOGD << prodRule(3);
+                                                $$ = new Funcs();              }
 ; 
 
 FuncDecl :
         RetType ID LPAREN Formals RPAREN LBRACE
         {$$ = new FuncDecl(dynamic_cast<RetType*>($1), $2, dynamic_cast<Formals*>($4));} 
-        Statements RBRACE                      {closeScope();                   }
+        Statements RBRACE                      {PLOGD << prodRule(4);
+                                                closeScope();                   }
 ;
 
 RetType :
-        Type                                   {$$ = new RetType(dynamic_cast<Type*>($1));}
-    |   VOID                                   {$$ = new RetType($1);              }
+        Type                                   {PLOGD << prodRule(5);
+                                                $$ = new RetType(dynamic_cast<Type*>($1));}
+    |   VOID                                   {PLOGD << prodRule(6);
+                                                $$ = new RetType($1);              }
 ;
 
 Formals :
-        /*epsilon*/                            {$$ = new Formals();             }        
-    |   FormalsList                            {$$ = new Formals(dynamic_cast<FormalsList*>($1));}
+        /*epsilon*/                            {PLOGD << prodRule(7);
+                                                $$ = new Formals();             }        
+    |   FormalsList                            {PLOGD << prodRule(8);
+                                                $$ = new Formals(dynamic_cast<FormalsList*>($1));}
 
 FormalsList :
-        FormalDecl                             {$$ = new FormalsList(dynamic_cast<FormalDecl*>($1));       }
-    |   FormalDecl COMMA FormalsList           {$$ = new FormalsList(dynamic_cast<FormalDecl*>($1), dynamic_cast<FormalsList*>($3));    }
+        FormalDecl                             {PLOGD << prodRule(9);
+                                                $$ = new FormalsList(dynamic_cast<FormalDecl*>($1));       }
+    |   FormalDecl COMMA FormalsList           {PLOGD << prodRule(10);
+                                                $$ = new FormalsList(dynamic_cast<FormalDecl*>($1), dynamic_cast<FormalsList*>($3));    }
 ;
 
 FormalDecl :
-        Type ID                                {$$ = new FormalDecl(dynamic_cast<Type*>($1), $2);    }
+        Type ID                                {PLOGD << prodRule(11);
+                                                $$ = new FormalDecl(dynamic_cast<Type*>($1), $2);    }
 ;
 
 Statements :
-        Statement                              {$$ = new Statements();             }
-    |   Statements Statement                   {$$ = new Statements();             }
+        Statement                              {PLOGD << prodRule(12);
+                                                $$ = new Statements();             }
+    |   Statements Statement                   {PLOGD << prodRule(13);
+                                                $$ = new Statements();             }
 ;
 
 Statement :
-        LBRACE M Statements RBRACE             {$$ = new Statement();
+        LBRACE M Statements RBRACE             {PLOGD << prodRule(14);
+                                                $$ = new Statement();
                                                 closeScope();                   }
-    |   Type ID SC                             {$$ = new Statement(dynamic_cast<Type*>($1), $2);}
-    |   Type ID ASSIGN Exp SC                  {$$ = new Statement(dynamic_cast<Type*>($1), $2, dynamic_cast<Exp*>($4));}
-    |   AUTO ID ASSIGN Exp SC                  {$$ = new Statement($1, $2, dynamic_cast<Exp*>($4));}
-    |   ID ASSIGN Exp SC                       {$$ = new Statement($1, dynamic_cast<Exp*>($3));}
-    |   Call SC                                {$$ = new Statement(dynamic_cast<Call*>($1));           }
-    |   RETURN SC                              {$$ = new Statement($1);         }
-    |   RETURN Exp SC                          {$$ = new Statement(dynamic_cast<Exp*>($2));}
+    |   Type ID SC                             {PLOGD << prodRule(15);
+                                                $$ = new Statement(dynamic_cast<Type*>($1), $2);}
+    |   Type ID ASSIGN Exp SC                  {PLOGD << prodRule(16); 
+                                                $$ = new Statement(dynamic_cast<Type*>($1), $2, dynamic_cast<Exp*>($4));}
+    |   AUTO ID ASSIGN Exp SC                  {PLOGD << prodRule(17);
+                                                $$ = new Statement($1, $2, dynamic_cast<Exp*>($4));}
+    |   ID ASSIGN Exp SC                       {PLOGD << prodRule(18);
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3));}
+    |   Call SC                                {PLOGD << prodRule(19);
+                                                $$ = new Statement(dynamic_cast<Call*>($1));           }
+    |   RETURN SC                              {PLOGD << prodRule(20);
+                                                $$ = new Statement($1);         }
+    |   RETURN Exp SC                          {PLOGD << prodRule(21);
+                                                $$ = new Statement(dynamic_cast<Exp*>($2));}
     |   IF LPAREN Exp RPAREN M 
-        Statement %prec IF                     {$$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
+        Statement %prec IF                     {PLOGD << prodRule(22);
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
                                                 closeScope();                   }
     |   IF LPAREN Exp RPAREN M 
-        Statement ELSE M2 Statement            {$$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
+        Statement ELSE M2 Statement            {PLOGD << prodRule(23);
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
                                                 closeScope();}
     |   WHILE LPAREN Exp RPAREN 
         {openScope(); loop_counter++;}
-        Statement                              {$$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
+        Statement                              {PLOGD << prodRule(24);
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
                                                 closeScope(); loop_counter--;   }
-    |   BREAK SC                               {$$ = new Statement($1);         }
-    |   CONTINUE SC                            {$$ = new Statement($1);         }                                 
+    |   BREAK SC                               {PLOGD << prodRule(25);
+                                                $$ = new Statement($1);         }
+    |   CONTINUE SC                            {PLOGD << prodRule(26);
+                                                $$ = new Statement($1);         }                                 
 ;
 
 M :
-        /*epsilon*/                            {openScope();                   };
+        /*epsilon*/                            {PLOGD << prodRule(48); 
+                                                openScope();                   };
 ;
 
 M2 :
-        /*epsilon*/                            {closeScope();                   
+        /*epsilon*/                            {PLOGD << prodRule(49); 
+                                                closeScope();                   
                                                 openScope();                     }
 ;
 
 
 Call :
-        ID LPAREN ExpList RPAREN               {$$ = new Call($1, dynamic_cast<ExpList*>($3));}
-    |   ID LPAREN RPAREN                       {$$ = new Call($1);                   }
+        ID LPAREN ExpList RPAREN               {PLOGD << prodRule(27);
+                                                $$ = new Call($1, dynamic_cast<ExpList*>($3));}
+    |   ID LPAREN RPAREN                       {PLOGD << prodRule(28);
+                                                $$ = new Call($1);                   }
 ;
 
 ExpList :
-        Exp                                    {$$ = new ExpList(dynamic_cast<Exp*>($1));}
-    |   Exp COMMA ExpList                      {$$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<ExpList*>($3));}
+        Exp                                    {PLOGD << prodRule(29);
+                                                $$ = new ExpList(dynamic_cast<Exp*>($1));}
+    |   Exp COMMA ExpList                      {PLOGD << prodRule(30);
+                                                $$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<ExpList*>($3));}
 ;
 
 Type :
-        INT                                    {$$ = new Type($1);              }
-    |   BYTE                                   {$$ = new Type($1);              }
-    |   BOOL                                   {$$ = new Type($1);              }
+        INT                                    {PLOGD << prodRule(31);
+                                                $$ = new Type($1);              }
+    |   BYTE                                   {PLOGD << prodRule(32);
+                                                $$ = new Type($1);              }
+    |   BOOL                                   {PLOGD << prodRule(33);
+                                                $$ = new Type($1);              }
 ;
 
 Exp :
-        LPAREN Exp RPAREN                      {$$ = new Exp(dynamic_cast<Exp*>($2));}
-    |   Exp BINOP_MULDIV Exp                   {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp BINOP_PLUSMINUS Exp                {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   ID                                     {$$ = new Exp(($1));                 }
-    |   Call                                   {$$ = new Exp(dynamic_cast<Call*>($1));}
-    |   NUM                                    {$$ = new Exp($1);                   }
-    |   NUM B                                  {$$ = new Exp($1, $2);               }
-    |   STRING                                 {$$ = new Exp($1);                   }
-    |   TRUE                                   {$$ = new Exp($1);                   }
-    |   FALSE                                  {$$ = new Exp($1);                   }
-    |   NOT Exp                                {$$ = new Exp($1, dynamic_cast<Exp*>($2));}
-    |   Exp AND Exp                            {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp OR Exp                             {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp RELOP_EQ Exp                       {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp RELOP_SIZE Exp                     {$$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+        LPAREN Exp RPAREN                      {PLOGD << prodRule(34);
+                                                $$ = new Exp(dynamic_cast<Exp*>($2));}
+    |   Exp BINOP_MULDIV Exp                   {PLOGD << prodRule(35);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp BINOP_PLUSMINUS Exp                {PLOGD << prodRule(35);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   ID                                     {PLOGD << prodRule(36);
+                                                $$ = new Exp(($1));                 }
+    |   Call                                   {PLOGD << prodRule(37);
+                                                $$ = new Exp(dynamic_cast<Call*>($1));}
+    |   NUM                                    {PLOGD << prodRule(38);
+                                                $$ = new Exp($1);                   }
+    |   NUM B                                  {PLOGD << prodRule(39);
+                                                $$ = new Exp($1, $2);               }
+    |   STRING                                 {PLOGD << prodRule(40);
+                                                $$ = new Exp($1);                   }
+    |   TRUE                                   {PLOGD << prodRule(41);
+                                                $$ = new Exp($1);                   }
+    |   FALSE                                  {PLOGD << prodRule(42);
+                                                $$ = new Exp($1);                   }
+    |   NOT Exp                                {PLOGD << prodRule(43);
+                                                $$ = new Exp($1, dynamic_cast<Exp*>($2));}
+    |   Exp AND Exp                            {PLOGD << prodRule(44);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp OR Exp                             {PLOGD << prodRule(45);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp RELOP_EQ Exp                       {PLOGD << prodRule(46);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp RELOP_SIZE Exp                     {PLOGD << prodRule(46);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
     |   LPAREN Type RPAREN
-         Exp %prec CAST_PREC                   {$$ = new Exp(dynamic_cast<Type*>($2), dynamic_cast<Exp*>($4));}
+         Exp %prec CAST_PREC                   {PLOGD << prodRule(47);
+                                                $$ = new Exp(dynamic_cast<Type*>($2), dynamic_cast<Exp*>($4));}
 ;
 
 %%
