@@ -58,7 +58,7 @@ const std::string output::rules[] = {
 };
 
 std::string output::prodRule(const int ruleno) {
-    std::string message = "PROD_RULE,  line: " + std::to_string(yylineno) + ",  " + output::rules[ruleno-1];
+    std::string message = "line: " + std::to_string(yylineno) + ",  " + output::rules[ruleno-1];
     return message;
 }
 

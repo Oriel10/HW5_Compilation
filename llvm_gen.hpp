@@ -8,15 +8,16 @@
 class llvmGen
 { 
     size_t m_reg_num;
-    // CodeBuffer& m_cb_inst;
+    CodeBuffer* m_cb;
 
 public: 
 
-    llvmGen() = default;
+    llvmGen();
     // static llvmGen& instance();
     std::string genRegister();
-    void genInitialFuncs();
-    std::string genFuncDecl(type_t RetType, std::string funcName, std::vector<type_t> argsTypes);
+    void genInitialFuncs() const;
+    void genFuncDecl(type_t RetType, const std::string& funcName,
+                 std::vector<type_t> argsTypes) const; //TODO: add somehow pointers to args.
 };
 
 
