@@ -7,7 +7,7 @@
 #include <map>
 #include <utility>
 
-extern stack<SymbolTable> tables_stack;
+extern vector<SymbolTable> tables_stack;
  
 
 std::map<type_t, string>
@@ -22,11 +22,11 @@ std::map<type_t, string>
 std::map<pair<string, type_t>, string>
  CFanToLlvmOPsMap = {
     {pair<string, type_t>("*", INT_T), "mul i32"},
-    {pair<string, type_t>("/", INT_T), "sdiv i32"}, //TODO: when is it udiv?
+    {pair<string, type_t>("/", INT_T), "sdiv i32"}, 
     {pair<string, type_t>("+", INT_T), "add i32"},
     {pair<string, type_t>("-", INT_T), "sub i32"},
     {pair<string, type_t>("*", BYTE_T), "mul i8"},
-    {pair<string, type_t>("/", BYTE_T), "sdiv i8"}, 
+    {pair<string, type_t>("/", BYTE_T), "udiv i8"}, 
     {pair<string, type_t>("+", BYTE_T), "add i8"},
     {pair<string, type_t>("-", BYTE_T), "sub i8"},
 };
@@ -54,6 +54,7 @@ std::string llvmGen::getIdentation() const
 }
 
 string llvmGen::setReg(string init_val, type_t val_type){
+    //TODO: fix empty add(src2) 
     assert(val_type != STRING_T);
     string llvm_type = CFanToLlvmTypesMap[val_type];
     string reg = getFreshRegister();
@@ -66,7 +67,7 @@ string llvmGen::setReg(string init_val, type_t val_type){
 string llvmGen::genStringReg(string str){
     string g_reg = getFreshRegister(true);
     int str_len = str.length();
-    string res = g_reg + " = constant [" + to_string(str_len) + " x i8], c\"" + str + "\\00\"\n";
+    string res = g_reg + " = constant [" + to_string(str_len-1) + " x i8] c\"" + str.substr(1,str.length()-2) + "\\00\"\n";
     m_cb->emitGlobal(res);
     //maybe emit getelementptr here?
     return g_reg;
@@ -76,6 +77,7 @@ string llvmGen::genBinop(string reg1, string op, string reg2, type_t op_type){
     string res_reg = getFreshRegister();
     // %vari = op type %reg1, %reg2 
     //TODO: handle dev by 0 - create a label to deal with it?
+    //%vari = op type %var1, %var2
     string to_emit = res_reg + " = " + CFanToLlvmOPsMap[pair<string, type_t>(op, op_type)] + " " + reg1 + ", " + reg2; 
     llvmEmit(to_emit);
     return res_reg;
@@ -83,19 +85,18 @@ string llvmGen::genBinop(string reg1, string op, string reg2, type_t op_type){
 
 int llvmGen::llvmEmit(const string& str) const
 {
-    PLOGI << "m_indentation: "<< m_indentation;
+    PLOGI << "emit the command: "<< str;
     return m_cb->emit(getIdentation() + str);
 }
 
 std::string llvmGen::getFreshRegister(bool is_global){
-
+    PLOGI<< "tables_stack.size():" << tables_stack.size();//TODO: remove this line
     std::string res_reg = is_global ? "@var" : "%var";
     res_reg += std::to_string(m_reg_num++);
     return res_reg;
 }
 
 //%var15 = add i32 0, value
-
 void llvmGen::genFuncDecl(type_t retType, const std::string& funcName, std::vector<type_t> argsTypes) const
 {
     PLOGI << "Generaing function declaration: \"" + funcName + "\"";
@@ -122,7 +123,6 @@ void llvmGen::genInitialFuncs() const
 
     m_cb->emitGlobal("declare i32 @printf(i8*, ...)");
     m_cb->emitGlobal("declare void @exit(i32)");
-    m_cb->emitGlobal("declare i8* @llvm.frameaddress(i32 <level>)");
     m_cb->emitGlobal("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
     m_cb->emitGlobal("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
     m_cb->emitGlobal("");
@@ -144,18 +144,19 @@ void llvmGen::genInitialFuncs() const
     llvmEmit("");
 }
 
-string llvmGen::genAllocVar()
-{
-    PLOGI << "Generating alloca commad";
-    string res_reg = getFreshRegister(); 
-    llvmEmit(res_reg + " = alloca i32");
+string llvmGen::genGetElementPtr(string type, string ptr_reg, unsigned int offset, bool is_aggregate)
+{   string res_reg = getFreshRegister();
+    //%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
+    string to_emit;
+    if(!is_aggregate){//stack usage
+        assert(type == "i32");
+        to_emit = res_reg + " = getelementptr i32,  i32*" + ptr_reg + ", i32 " + to_string(offset);
+    }
+    else{//string usage
+        to_emit = res_reg + " = getelementptr " + type +", " + type + "*" + ptr_reg +  "i32 0, i32 " + to_string(offset);
+    }
+    llvmEmit(to_emit);
     return res_reg;
-}
-
-void llvmGen::genStoreValInVar(std::string varName, size_t value)
-{
-    PLOGI << "Generating store command";
-    llvmEmit("store i32 " +std::to_string(value) + ", i32* %" + varName);
 }
 
 void llvmGen::incIdentation(){
@@ -174,10 +175,50 @@ void llvmGen::closeFunc(){
     // llvmEmit("");
 }
 
-//TODO: finish
-// string llvmGen::genGetVar(string varName)
-// {
-//     auto& curr_entry = tables_stack.back();
-//     int offset = curr_entry.varOffsetByName(varName);
-//     llvmEmit("");
-// }
+string llvmGen::genAllocVar()
+{
+    PLOGI << "Generating alloca commad";
+    const auto& var = getFreshRegister();
+    llvmEmit(var + " = alloca i32");
+    llvmEmit("store i32 0, i32* " + var);
+    return var;
+}
+
+string llvmGen::genGetVar(const string& varName)
+{
+    PLOGI << "Generating genGetVar commands";
+
+    auto& curr_table = tables_stack.back();
+    int offset = curr_table.GetVarOffsetByName(varName);
+    auto ptr = getFreshRegister();
+    llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
+    auto var_value = getFreshRegister();
+    llvmEmit(var_value + " = load i32, *i32" + varName);
+    
+    type_t varType = curr_table.GetVarTypeByName(varName);
+    if (varType == type_t::INT_T){
+        return var_value;
+    }
+    else{
+        string casted_reg = getFreshRegister();
+        llvmEmit(casted_reg + "trunc i32 " + var_value + " to " + CFanToLlvmTypesMap[varType]);
+        return casted_reg;
+    }
+}
+
+//TODO: support diffrenet types
+//TODO: check offest
+void llvmGen::genStoreValInVar(string varName, string reg)
+{
+    PLOGI << "Generating store command";
+    PLOGI << varName << ", " << reg;
+    PLOGI << "tables_stack size: " << tables_stack.size();
+
+    auto& curr_table = tables_stack.back();
+    int offset = curr_table.GetVarOffsetByName(varName);
+
+     PLOGI << "After GetVarOffsetByName func";
+    auto ptr = getFreshRegister();
+    llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
+    llvmEmit("store i32 " + reg + ", i32* " + ptr);
+}

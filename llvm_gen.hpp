@@ -16,21 +16,30 @@ public:
     llvmGen();
     static llvmGen& instance();
 
-    string getIdentation() const;
+    const size_t maxNumOfVars = 50;
+
     int llvmEmit(const string& str) const;
-    string getFreshRegister(bool is_global = false);
-    string setReg(string init_val, type_t val_type);
-    string genStringReg(string str);
-    string genBinop(string reg1, string op, string reg2, type_t op_type);
-    void genInitialFuncs() const;
-    void genFuncDecl(type_t RetType, const string& funcName,
-                 vector<type_t> argsTypes) const;
-    string genAllocVar();
-    void genStoreValInVar(string varName, size_t value);
+    void closeFunc();
+    
+    // Handle identation
     void incIdentation();
     void decIdentation();
     void zeroIdentation();
-    void closeFunc();
+    string getIdentation() const;
+    
+    string getFreshRegister(bool is_global = false);
+    string setReg(string init_val, type_t val_type);
+
+    string genStringReg(string str);
+    string genBinop(string reg1, string op, string reg2, type_t op_type);
+    void genInitialFuncs() const;
+    void genFuncDecl(type_t RetType, const string& funcName, vector<type_t> argsTypes) const;
+    
+    //usage: %res_reg = getelementptr type, type* ptr_reg, i32 0, i32 idx
+    string genGetElementPtr(string type, string ptr_reg, unsigned int idx, bool is_aggregate = false);
+    string genAllocVar();
+    string genGetVar(const string& varName);
+    void genStoreValInVar(string varName, string reg);
 };
 
 

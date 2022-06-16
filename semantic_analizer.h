@@ -59,7 +59,8 @@ struct SymbolTable{
     void addFuncEntry (const string& name, type_t ret_type, vector<type_t>& arg_types);
     void addVarEntry (const string& name, type_t type);
     void addArgEntry (const string& name, type_t type, int offset);
-    int varOffsetByName(string varName);
+    int GetVarOffsetByName(const string& varName);
+    type_t GetVarTypeByName(const string& varName);
 }; 
 
 void openScope();

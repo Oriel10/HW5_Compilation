@@ -66,6 +66,7 @@ FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
     // llvm generation
     llvm_inst.genFuncDecl(ret_type->m_type, id->lexeme, args);
     llvm_inst.incIdentation();
+    llvm_inst.llvmEmit("%frame_ptr = alloca i32, i32 " + std::to_string(llvm_inst.maxNumOfVars));
 }
 
 // RetType -> Type
@@ -183,6 +184,9 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
     }
     assert(tables_stack.size());
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
+
+    //llvm generation
+    llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
 }
 
 // Statement -> AUTO ID ASSIGN Exp SC
@@ -197,6 +201,9 @@ Statement::Statement(Node* auto_token, Node* id, Exp* exp)
     }
     assert(tables_stack.size());
     tables_stack.back().addVarEntry(id->lexeme, exp->m_type);
+
+    //llvm generation
+    llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
 }
 
 // Statement -> ID ASSIGN Exp SC
@@ -212,6 +219,9 @@ Statement::Statement(Node* id, Exp* exp)
     if (!automaticCastValidity(exp->m_type, var->m_type)){
         ERROR(output::errorMismatch(yylineno));
     }
+
+    //llvm generation
+    llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
 }
 
 // Statement -> Call SC
@@ -369,8 +379,11 @@ Exp::Exp(Node* node){
     else if(node->token_type == "STRING"){
         m_type = STRING_T;
         string g_str_reg = llvm_inst.genStringReg(node->lexeme);
-        string str_len = to_string(node->lexeme.length());
+        string str_len = to_string(node->lexeme.length()-1);
         m_reg = llvm_inst.getFreshRegister();
+        
+        string emit_type = "[" + str_len + " x i8]";
+
         string str_emit = m_reg + " = getelementptr [" + str_len + " x i8], [" + str_len + " x i8]* " + g_str_reg + ", i32 0, i32 0";
         llvm_inst.llvmEmit(str_emit);
     }

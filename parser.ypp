@@ -9,8 +9,8 @@
     using namespace output;
     extern void closeScope();
 
-    extern stack<SymbolTable> tables_stack;
-    extern stack<int> offsets_stack;
+    extern vector<SymbolTable> tables_stack;
+    extern vector<int> offsets_stack;
     extern size_t loop_counter;
     extern char* yytext;
 

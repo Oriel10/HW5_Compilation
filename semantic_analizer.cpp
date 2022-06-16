@@ -55,14 +55,29 @@ void SymbolTable::addArgEntry(const string& name, type_t type, int offset)
     m_entries.push_back(SymbolTableEntry(name, type, offset, symbol_type_t::ARG));    
 }
 
-int SymbolTable::varOffsetByName(string varName)
+int SymbolTable::GetVarOffsetByName(const string& varName)
+{
+    PLOGI << "Calling GetVarOffsetByName function";
+    PLOGI << std::to_string(m_entries.size());
+    // for (auto& entry : m_entries){
+    //     PLOGI << entry.m_name;
+    //     if (varName == entry.m_name){
+    //         return entry.m_offset;
+    //     }
+    // }
+    PLOGF << "variable " + varName + "hasn't been found in symbol table";
+    return 0;
+}
+
+type_t SymbolTable::GetVarTypeByName(const string& varName)
 {
     for (auto& entry : m_entries){
         if (varName == entry.m_name){
-            return entry.m_offset;
+            return entry.m_type;
         }
     }
-    PLOGF << "variable " + varName + "hasn't been found in symbol table"; 
+    PLOGF << "variable " + varName + "hasn't been found in symbol table";
+    return type_t::INT_T; //TODO: think add error type
 }
 
 
@@ -106,6 +121,11 @@ void closeScope()
     assert(tables_stack.size());
     assert(offsets_stack.size());
     const auto& table = tables_stack.back();
+
+    //TODO: remove
+    // output::endScope();
+    // table.print();
+    
     tables_stack.pop_back();
     offsets_stack.pop_back();
 }
