@@ -5,16 +5,30 @@
 #include <sstream>
 #include "plog/include/plog/Log.h"
 #include <map>
+#include <utility>
 
 extern stack<SymbolTable> tables_stack;
  
 
-std::map<type_t, std::string>
+std::map<type_t, string>
  CFanToLlvmTypesMap = {
     {type_t::INT_T, "i32"},
     {type_t::BYTE_T, "i8" },
     {type_t::BOOL_T, "i1"},
-    {type_t::VOID_T, "void"}
+    {type_t::VOID_T, "void"},
+    {type_t::STRING_T, "i8*"}
+};
+
+std::map<pair<string, type_t>, string>
+ CFanToLlvmOPsMap = {
+    {pair<string, type_t>("*", INT_T), "mul i32"},
+    {pair<string, type_t>("/", INT_T), "sdiv i32"}, //TODO: when is it udiv?
+    {pair<string, type_t>("+", INT_T), "add i32"},
+    {pair<string, type_t>("-", INT_T), "sub i32"},
+    {pair<string, type_t>("*", BYTE_T), "mul i8"},
+    {pair<string, type_t>("/", BYTE_T), "sdiv i8"}, 
+    {pair<string, type_t>("+", BYTE_T), "add i8"},
+    {pair<string, type_t>("-", BYTE_T), "sub i8"},
 };
 
 
@@ -39,14 +53,43 @@ std::string llvmGen::getIdentation() const
     return res;
 }
 
+string llvmGen::setReg(string init_val, type_t val_type){
+    assert(val_type != STRING_T);
+    string llvm_type = CFanToLlvmTypesMap[val_type];
+    string reg = getFreshRegister();
+    string assignment = reg + " = add " + llvm_type +" " + init_val + ", 0"; 
+    llvmEmit(assignment);
+    PLOGI << assignment;
+    return reg;
+}
+
+string llvmGen::genStringReg(string str){
+    string g_reg = getFreshRegister(true);
+    int str_len = str.length();
+    string res = g_reg + " = constant [" + to_string(str_len) + " x i8], c\"" + str + "\\00\"\n";
+    m_cb->emitGlobal(res);
+    //maybe emit getelementptr here?
+    return g_reg;
+}
+
+string llvmGen::genBinop(string reg1, string op, string reg2, type_t op_type){
+    string res_reg = getFreshRegister();
+    // %vari = op type %reg1, %reg2 
+    //TODO: handle dev by 0 - create a label to deal with it?
+    string to_emit = res_reg + " = " + CFanToLlvmOPsMap[pair<string, type_t>(op, op_type)] + " " + reg1 + ", " + reg2; 
+    llvmEmit(to_emit);
+    return res_reg;
+}
+
 int llvmGen::llvmEmit(const string& str) const
 {
     PLOGI << "m_indentation: "<< m_indentation;
     return m_cb->emit(getIdentation() + str);
 }
 
-std::string llvmGen::getFreshRegister(){
-    std::string res_reg = "%var";
+std::string llvmGen::getFreshRegister(bool is_global){
+
+    std::string res_reg = is_global ? "@var" : "%var";
     res_reg += std::to_string(m_reg_num++);
     return res_reg;
 }
@@ -82,7 +125,7 @@ void llvmGen::genInitialFuncs() const
     m_cb->emitGlobal("declare i8* @llvm.frameaddress(i32 <level>)");
     m_cb->emitGlobal("@.int_specifier = constant [4 x i8] c\"%d\\0A\\00\"");
     m_cb->emitGlobal("@.str_specifier = constant [4 x i8] c\"%s\\0A\\00\"");
-    llvmEmit("");
+    m_cb->emitGlobal("");
     
     //hard coded printi implementation
     llvmEmit("define void @printi(i32) {");
@@ -101,10 +144,12 @@ void llvmGen::genInitialFuncs() const
     llvmEmit("");
 }
 
-void llvmGen::genAllocVar()
+string llvmGen::genAllocVar()
 {
     PLOGI << "Generating alloca commad";
-    llvmEmit(getFreshRegister() + " = alloca i32");
+    string res_reg = getFreshRegister(); 
+    llvmEmit(res_reg + " = alloca i32");
+    return res_reg;
 }
 
 void llvmGen::genStoreValInVar(std::string varName, size_t value)
@@ -125,8 +170,8 @@ void llvmGen::zeroIdentation(){
 
 void llvmGen::closeFunc(){
     zeroIdentation();
-    llvmEmit("}");
-    llvmEmit("");
+    llvmEmit("}\n");
+    // llvmEmit("");
 }
 
 //TODO: finish

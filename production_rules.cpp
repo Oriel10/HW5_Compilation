@@ -304,6 +304,7 @@ Exp::Exp(Exp* other_exp){
     ASSERT_ARG(other_exp);
     lineno = other_exp->lineno;
     m_type = other_exp->m_type;
+    m_reg = other_exp->m_reg;
 }
 
 // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
@@ -335,16 +336,20 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         }
         if(exp1->m_type == BYTE_T && exp2->m_type == BYTE_T){
             m_type = BYTE_T;
+            m_reg = llvm_inst.genBinop(exp1->m_reg, node->lexeme, exp2->m_reg, BYTE_T);
         }
         else{
             m_type = INT_T;
+            m_reg = llvm_inst.genBinop(exp1->m_reg, node->lexeme, exp2->m_reg, INT_T);
         }
+
     }
 } 
 
 
 // Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}
 Exp::Exp(Node* node){
+    PLOGI << "Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}";
     ASSERT_ARG(node);
     lineno = node->lineno;
     if(node->token_type == "ID"){
@@ -355,17 +360,28 @@ Exp::Exp(Node* node){
             m_type = id_p->m_type;
             return;
         }    
-        ERROR(output::errorUndef(yylineno, node->lexeme));        
+        ERROR(output::errorUndef(yylineno, node->lexeme));      
     }
     else if(node->token_type == "NUM"){
         m_type = INT_T;
-        
+        m_reg = llvm_inst.setReg(node->lexeme, INT_T);
     }
     else if(node->token_type == "STRING"){
         m_type = STRING_T;
+        string g_str_reg = llvm_inst.genStringReg(node->lexeme);
+        string str_len = to_string(node->lexeme.length());
+        m_reg = llvm_inst.getFreshRegister();
+        string str_emit = m_reg + " = getelementptr [" + str_len + " x i8], [" + str_len + " x i8]* " + g_str_reg + ", i32 0, i32 0";
+        llvm_inst.llvmEmit(str_emit);
+    }
+    else if(node->token_type == "TRUE"){
+        m_type = BOOL_T;
+        m_reg = llvm_inst.setReg("1", BOOL_T);
     }
     else{
+        assert(node->token_type == "FALSE");
         m_type = BOOL_T;
+        m_reg = llvm_inst.setReg("0", BOOL_T);
     }
 } 
 
@@ -378,6 +394,7 @@ Exp::Exp(Node* node, Node* B)
     if(stoi(node->lexeme) > MAX_BYTE_SIZE){
         ERROR(output::errorByteTooLarge(yylineno, node->lexeme));
     }
+    m_reg = llvm_inst.setReg(node->lexeme, BYTE_T);
 }
 
 // 𝐸𝑥𝑝 → 𝐿𝑃𝐴𝑅𝐸𝑁 𝑇𝑦𝑝𝑒 𝑅𝑃𝐴𝑅𝐸𝑁 𝐸𝑥p

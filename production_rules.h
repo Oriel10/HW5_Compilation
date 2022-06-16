@@ -142,7 +142,7 @@ struct Type : public Node{
 struct Exp : public Node{
     //save type here?
     type_t m_type;
-    string reg;
+    string m_reg;
     Exp(Exp*); // Exp -> LP Exp RP
     Exp(Exp*, Node* , Exp*); // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
     Exp(Node*); // Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}

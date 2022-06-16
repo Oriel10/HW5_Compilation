@@ -2,7 +2,9 @@
 
 void main()
 {
-    int x;
-    int y;
+    print("hello");
+    int x = 2+3;
+    int y = 7;
     int z;
+    
 }

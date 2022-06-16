@@ -18,11 +18,14 @@ public:
 
     string getIdentation() const;
     int llvmEmit(const string& str) const;
-    string getFreshRegister();
+    string getFreshRegister(bool is_global = false);
+    string setReg(string init_val, type_t val_type);
+    string genStringReg(string str);
+    string genBinop(string reg1, string op, string reg2, type_t op_type);
     void genInitialFuncs() const;
     void genFuncDecl(type_t RetType, const string& funcName,
                  vector<type_t> argsTypes) const;
-    void genAllocVar();
+    string genAllocVar();
     void genStoreValInVar(string varName, size_t value);
     void incIdentation();
     void decIdentation();
