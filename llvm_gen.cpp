@@ -37,7 +37,7 @@ llvmGen::llvmGen(): m_reg_num(0), m_indentation(0)
     m_cb = &(CodeBuffer::instance());
 }
 
-//TODO: Create instance
+
 llvmGen &llvmGen::instance() {
 	static llvmGen inst;//only instance
 	return inst;
@@ -54,7 +54,6 @@ std::string llvmGen::getIdentation() const
 }
 
 string llvmGen::setReg(string init_val, type_t val_type){
-    //TODO: fix empty add(src2) 
     assert(val_type != STRING_T);
     string llvm_type = CFanToLlvmTypesMap[val_type];
     string reg = getFreshRegister();
@@ -90,13 +89,11 @@ int llvmGen::llvmEmit(const string& str) const
 }
 
 std::string llvmGen::getFreshRegister(bool is_global){
-    PLOGI<< "tables_stack.size():" << tables_stack.size();//TODO: remove this line
     std::string res_reg = is_global ? "@var" : "%var";
     res_reg += std::to_string(m_reg_num++);
     return res_reg;
 }
 
-//%var15 = add i32 0, value
 void llvmGen::genFuncDecl(type_t retType, const std::string& funcName, std::vector<type_t> argsTypes) const
 {
     PLOGI << "Generaing function declaration: \"" + funcName + "\"";
@@ -148,9 +145,10 @@ string llvmGen::genGetElementPtr(string type, string ptr_reg, unsigned int offse
 {   string res_reg = getFreshRegister();
     //%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
     string to_emit;
+
     if(!is_aggregate){//stack usage
         assert(type == "i32");
-        to_emit = res_reg + " = getelementptr i32,  i32*" + ptr_reg + ", i32 " + to_string(offset);
+        to_emit = res_reg + " = getelementptr i32, i32* " + ptr_reg + ", i32 " + to_string(offset);
     }
     else{//string usage
         to_emit = res_reg + " = getelementptr " + type +", " + type + "*" + ptr_reg +  "i32 0, i32 " + to_string(offset);
@@ -180,7 +178,8 @@ string llvmGen::genAllocVar()
     PLOGI << "Generating alloca commad";
     const auto& var = getFreshRegister();
     llvmEmit(var + " = alloca i32");
-    llvmEmit("store i32 0, i32* " + var);
+    genStore("i32", "0", var);
+    // llvmEmit("store i32 0, i32* " + var);
     return var;
 }
 
@@ -190,10 +189,19 @@ string llvmGen::genGetVar(const string& varName)
 
     auto& curr_table = tables_stack.back();
     int offset = curr_table.GetVarOffsetByName(varName);
-    auto ptr = getFreshRegister();
-    llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
+    bool is_arg = offset < 0;
+    if(is_arg){
+        offset = -offset;
+        return "%" + to_string(--offset);
+    }
+    llvmEmit("");
+    //%vari = getelementptr i32, i32* %frame_ptr, i32 offset
+    string src_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
+    // llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
     auto var_value = getFreshRegister();
-    llvmEmit(var_value + " = load i32, *i32" + varName);
+    //%varj = load i32, i32* %vari
+    // llvmEmit(var_value + " = load i32, i32* " + src_ptr);
+    genLoad(var_value, "i32", src_ptr);
     
     type_t varType = curr_table.GetVarTypeByName(varName);
     if (varType == type_t::INT_T){
@@ -206,19 +214,29 @@ string llvmGen::genGetVar(const string& varName)
     }
 }
 
+void llvmGen::genLoad(string dst_reg, string type, string src_ptr){
+    llvmEmit(dst_reg + " = load " + type + ", " + type + "* " + src_ptr);
+}
+
+void llvmGen::genStore(string type, string src_val, string dst_ptr){
+    llvmEmit("store " + type + " " + src_val + ", " + type + "* " + dst_ptr);
+}
+
 //TODO: support diffrenet types
 //TODO: check offest
-void llvmGen::genStoreValInVar(string varName, string reg)
+void llvmGen::genStoreValInVar(string varName, string src_reg)
 {
     PLOGI << "Generating store command";
-    PLOGI << varName << ", " << reg;
+    PLOGI << varName << ", " << src_reg;
     PLOGI << "tables_stack size: " << tables_stack.size();
 
     auto& curr_table = tables_stack.back();
     int offset = curr_table.GetVarOffsetByName(varName);
 
      PLOGI << "After GetVarOffsetByName func";
-    auto ptr = getFreshRegister();
-    llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
-    llvmEmit("store i32 " + reg + ", i32* " + ptr);
+    // auto ptr = getFreshRegister();
+    string dst_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
+    // llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
+    // llvmEmit("store i32 " + src_reg + ", i32* " + dst_ptr);
+    genStore("i32", src_reg, dst_ptr);
 }

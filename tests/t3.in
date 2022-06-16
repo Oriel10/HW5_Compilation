@@ -2,12 +2,15 @@
 
 void main()
 {
-    print("hello");
-    int x = 2+3;
-    int y = 7;
-    int z;   
+   return;
 }
 
 int foo(int x, int y){
     int z = x + y;
+    int w = x;
+    int a = w;
+
+    int h = 7*a;
+
+    return w;
 }

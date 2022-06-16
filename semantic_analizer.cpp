@@ -59,12 +59,11 @@ int SymbolTable::GetVarOffsetByName(const string& varName)
 {
     PLOGI << "Calling GetVarOffsetByName function";
     PLOGI << std::to_string(m_entries.size());
-    // for (auto& entry : m_entries){
-    //     PLOGI << entry.m_name;
-    //     if (varName == entry.m_name){
-    //         return entry.m_offset;
-    //     }
-    // }
+    for (auto& entry : m_entries){
+        if (varName == entry.m_name){
+            return entry.m_offset;
+        }
+    }
     PLOGF << "variable " + varName + "hasn't been found in symbol table";
     return 0;
 }
@@ -121,10 +120,6 @@ void closeScope()
     assert(tables_stack.size());
     assert(offsets_stack.size());
     const auto& table = tables_stack.back();
-
-    //TODO: remove
-    // output::endScope();
-    // table.print();
     
     tables_stack.pop_back();
     offsets_stack.pop_back();

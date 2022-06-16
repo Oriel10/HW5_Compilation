@@ -39,6 +39,8 @@ public:
     string genGetElementPtr(string type, string ptr_reg, unsigned int idx, bool is_aggregate = false);
     string genAllocVar();
     string genGetVar(const string& varName);
+    void genLoad(string dst_reg, string type, string src_ptr);
+    void genStore(string type, string src_reg, string dst_ptr);
     void genStoreValInVar(string varName, string reg);
 };
 

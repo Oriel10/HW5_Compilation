@@ -17,6 +17,7 @@ extern Dict types_dict;
 extern vector<SymbolTable> tables_stack;
 extern vector<int> offsets_stack;
 extern int yylineno;
+extern std::map<type_t, string> CFanToLlvmTypesMap;
 
 void startCompiler()
 {
@@ -256,7 +257,8 @@ Statement::Statement(Node* node){
         SymbolTableEntry curr_func = tables_stack[0].m_entries.back();
         if(curr_func.m_ret_type != VOID_T){
             ERROR(output::errorMismatch(yylineno));
-        }       
+        }
+        llvm_inst.llvmEmit("ret void");       
     }
     else if(node->token_type == "BREAK"){
         if (loop_counter == 0){
@@ -281,6 +283,9 @@ Statement::Statement(Exp* exp){
     if(!automaticCastValidity(curr_func.m_ret_type, exp->m_type)){
         ERROR(output::errorMismatch(yylineno));
     }
+    // string ret_res = llvm_inst.setReg(exp->m_reg, exp->m_type);
+    string to_emit = "ret " + CFanToLlvmTypesMap[exp->m_type] + " " +exp->m_reg;
+    llvm_inst.llvmEmit(to_emit);
 }
 
 
@@ -368,6 +373,7 @@ Exp::Exp(Node* node){
             // assert(id_p->m_symbol_type != FUNC);
             this->lexeme = id_p->m_name;
             m_type = id_p->m_type;
+            m_reg = llvm_inst.genGetVar(node->lexeme);
             return;
         }    
         ERROR(output::errorUndef(yylineno, node->lexeme));      
