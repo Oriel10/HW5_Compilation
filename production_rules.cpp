@@ -9,7 +9,7 @@
 
 
 
-llvmGen& llvm_inst = llvmGen::instance();  //TODO: check if instance is needed 
+llvmGen& llvm_inst = llvmGen::instance();
 
 size_t loop_counter = 0;
 
@@ -124,15 +124,14 @@ Call::Call(Node* func_id, ExpList* exp_list)
     //Semantic analasis
     lineno = exp_list->lineno;
     const SymbolTableEntry* id_p = findIdentifier(func_id->lexeme);
+    if(id_p->m_symbol_type != symbol_type_t::FUNC){
+        ERROR(output::errorUndefFunc(yylineno, id_p->m_name));
+    }
     //id doesnt exist or it's not a function
     if(!id_p || id_p->m_symbol_type != FUNC){
         ERROR(output::errorUndefFunc(yylineno, func_id->lexeme));
     }
-    if(id_p->m_symbol_type != symbol_type_t::FUNC){
-        ERROR(output::errorUndefFunc(yylineno, id_p->m_name));
-    }
     m_type = id_p->m_ret_type;
-
 
     bool is_error = false;
     if(exp_list->m_exp_list_types.size() != id_p->m_args_types.size()){
@@ -258,17 +257,14 @@ Statement::Statement(Call* call)
 Statement::Statement(Node* node, Exp* exp, Statement* statement){
     //statement arg is just to make this c'tor unique
     ASSERT_3ARGS(node, exp, statement);
-    // if(exp->m_type != BOOL_T){
-    //     ERROR(output::errorMismatch(exp->lineno));
-    // }
+    // do nothing
+
 }
 
 // Statement -> IF LP Exp RP Statement Else Statement
 Statement::Statement(Node* node_if, Exp* exp, Node* node_else){
     ASSERT_3ARGS(node_if, exp, node_else);
-    if(exp->m_type != BOOL_T){
-        ERROR(output::errorMismatch(exp->lineno));
-    }
+    // do nothing
 }
 
 //Statement -> RETURN SC | BREAK SC | CONTINUE SC
@@ -456,7 +452,6 @@ Exp::Exp(Node* node, Node* B)
 // 𝐸𝑥𝑝 → 𝐿𝑃𝐴𝑅𝐸𝑁 𝑇𝑦𝑝𝑒 𝑅𝑃𝐴𝑅𝐸𝑁 𝐸𝑥p
 Exp::Exp(Type* type, Exp* exp){
     ASSERT_2ARGS(type, exp);
-    PLOGD << types_dict[type->m_type] << ", " << types_dict[exp->m_type];
     lineno = exp->lineno;
     if (!explicitCastValidity(type->m_type, exp->m_type)){
         ERROR(output::errorMismatch(yylineno));
@@ -475,5 +470,4 @@ Exp::Exp(Node* NOT, Exp* exp){
         ERROR(output::errorMismatch(yylineno));
     }
     m_type = exp->m_type;
-
 }

@@ -1,0 +1,44 @@
+
+echo "--------------- Running Tests Spring19 ---------------"
+for file in `ls external_tests_s19/ | grep in | cut -d"." -f1`; 
+do
+
+	./hw3 < external_tests_s19/${file}.in > external_tests_s19/${file}
+	# diff external_tests_s19/$file external_tests_s19/${file}.out
+	DIFF=$(diff external_tests_s19/$file external_tests_s19/${file}.out)
+		
+	if [ "$DIFF" == "" ] 
+	then
+		echo "-- Test $file passed :D --"
+	else
+		echo "-- Test $file FAILED :'( --"
+		echo ">>>our output<<<: "
+		diff external_tests_s19/$file external_tests_s19/${file}.out
+		echo ">>>test output<<<: "
+		break
+	fi
+done
+
+echo "--------------- Running Tests Spring21 ---------------"
+
+for file in `ls external_tests_s21/ | grep in | cut -d"." -f1`; 
+do
+	
+	./hw3 < external_tests_s21/${file}.in > external_tests_s21/${file}
+	# diff external_tests_s21/$file external_tests_s21/${file}.out
+	
+	# -b flag ignores spaces, need to check if that is ok
+	DIFF=$(diff -b external_tests_s21/$file external_tests_s21/${file}.out)
+		
+	if [ "$DIFF" == "" ] 
+	then
+		echo "-- Test $file passed :D --"
+	else
+		echo "-- Test $file FAILED :'( --"
+		echo ">>>our output<<<: "
+		diff external_tests_s21/$file external_tests_s21/${file}.out
+		echo ">>>test output<<<: "
+		break
+	fi
+	
+done

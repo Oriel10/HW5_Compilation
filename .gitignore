@@ -5,3 +5,4 @@ tests/*.mine
 tests/*.llvm
 tests.sh
 log.txt
+tests/semantical_tests/hw3

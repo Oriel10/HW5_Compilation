@@ -133,7 +133,7 @@ void closeScope()
     assert(offsets_stack.size());
     const auto& table = tables_stack.back();
     
-    // TODO: check if symbol table printout is needed
+    // TODO: Here for symbol table printout
     // output::endScope();
     // table.print();
 

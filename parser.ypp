@@ -131,15 +131,15 @@ Statement :
                                                 $$ = new Statement($1);         }
     |   RETURN Exp SC                          {PLOGD << prodRule(21);
                                                 $$ = new Statement(dynamic_cast<Exp*>($2));}
-    |   IF LPAREN Exp RPAREN M 
+    |   IF LPAREN BOOL_EXP RPAREN M 
         Statement %prec IF                     {PLOGD << prodRule(22);
                                                 $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
                                                 closeScope();                   }
-    |   IF LPAREN Exp RPAREN M 
+    |   IF LPAREN BOOL_EXP RPAREN M 
         Statement ELSE M2 Statement            {PLOGD << prodRule(23);
                                                 $$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
                                                 closeScope();}
-    |   WHILE LPAREN Exp RPAREN 
+    |   WHILE LPAREN BOOL_EXP RPAREN 
         {openScope(); loop_counter++;}
         Statement                              {PLOGD << prodRule(24);
                                                 $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
@@ -152,7 +152,7 @@ Statement :
 
 M :
         /*epsilon*/                            {PLOGD << prodRule(48); 
-                                                openScope();                   };
+                                                openScope();                   }
 ;
 
 M2 :
@@ -161,6 +161,9 @@ M2 :
                                                 openScope();                     }
 ;
 
+BOOL_EXP :
+        Exp                                    {$$ = new Exp(dynamic_cast<Exp*>($1)); }
+;
 
 Call :
         ID LPAREN ExpList RPAREN               {PLOGD << prodRule(27);
@@ -187,7 +190,7 @@ Type :
 
 Exp :
         LPAREN Exp RPAREN                      {PLOGD << prodRule(34);
-                                                $$ = new Exp(dynamic_cast<Exp*>($2));}
+                                                $$ = new Exp($1, dynamic_cast<Exp*>($2), $3);}
     |   Exp BINOP_MULDIV Exp                   {PLOGD << prodRule(35);
                                                 $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
     |   Exp BINOP_PLUSMINUS Exp                {PLOGD << prodRule(35);
