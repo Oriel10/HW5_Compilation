@@ -45,7 +45,6 @@ llvmGen &llvmGen::instance() {
 
 std::string llvmGen::getIdentation() const
 {
-    PLOGI << "identation: " + std::to_string(m_indentation);
     std::string res = "";
     for (size_t i=0; i < m_indentation; i++){
         res += "    ";

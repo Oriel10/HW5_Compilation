@@ -3,7 +3,8 @@ echo "--------------- Running Tests ---------------"
 for file in `ls tests/ | grep in | cut -d"." -f1`; 
 do
 
-	./hw5 < tests/${file}.in > tests/${file}.mine
+	./hw5 < tests/${file}.in > tests/${file}.llvm
+	lli tests/${file}.llvm > tests/${file}.mine
 	DIFF=$(diff tests/$file.mine tests/${file}.out)
 		
 	if [ "$DIFF" == "" ] 
@@ -12,7 +13,7 @@ do
 	else
 		echo "-- Test $file FAILED :'( --"
 		echo ">>>our output<<<: "
-		diff tests/$file tests/${file}.out
+		diff tests/$file.mine tests/${file}.out
 		echo ">>>test output<<<: "
 		break
 	fi
