@@ -167,6 +167,15 @@ void llvmGen::zeroIdentation(){
 }
 
 void llvmGen::closeFunc(){
+    if(!tables_stack.back().is_return_appeared){
+        SymbolTableEntry& curr_func = tables_stack[0].m_entries.back();
+        if (curr_func.m_ret_type == type_t::VOID_T){
+            llvmEmit("ret void");
+        }
+        else{
+            llvmEmit("ret " + CFanToLlvmTypesMap[curr_func.m_ret_type] + " 0");
+        }
+    }
     zeroIdentation();
     llvmEmit("}\n");
     // llvmEmit("");

@@ -275,7 +275,8 @@ Statement::Statement(Node* node){
         if(curr_func.m_ret_type != VOID_T){
             ERROR(output::errorMismatch(yylineno));
         }
-        llvm_inst.llvmEmit("ret void");       
+        tables_stack.back().is_return_appeared = true;
+        llvm_inst.llvmEmit("ret void");
     }
     else if(node->token_type == "BREAK"){
         if (loop_counter == 0){

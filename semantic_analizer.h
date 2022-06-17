@@ -55,6 +55,7 @@ struct SymbolTable{
     vector<SymbolTableEntry> m_entries;
     SymbolTable(){}
     SymbolTable(vector<SymbolTableEntry> entries) : m_entries(entries) {}
+    bool is_return_appeared = false;
     void print() const;
     void addFuncEntry (const string& name, type_t ret_type, vector<type_t>& arg_types);
     void addVarEntry (const string& name, type_t type);

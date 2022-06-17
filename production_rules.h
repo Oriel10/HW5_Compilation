@@ -142,7 +142,6 @@ struct Type : public Node{
 };
 
 struct Exp : public Node{
-    //save type here?
     type_t m_type;
     string m_reg;
     Exp(Node*, Exp*, Node*); // Exp -> LP Exp RP

@@ -77,8 +77,8 @@ FuncDecl :
         RetType ID LPAREN Formals RPAREN LBRACE
         {$$ = new FuncDecl(dynamic_cast<RetType*>($1), $2, dynamic_cast<Formals*>($4));} 
         Statements RBRACE                      {PLOGD << prodRule(4);
-                                                closeScope();
-                                                llvm_inst.closeFunc();       }
+                                                llvm_inst.closeFunc();
+                                                closeScope();       }
 ;
 
 RetType :
