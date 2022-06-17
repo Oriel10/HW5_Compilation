@@ -18,7 +18,7 @@ public:
 
     const size_t maxNumOfVars = 50;
 
-    int llvmEmit(const string& str) const;
+    int llvmEmit(const string& str, const string& comment = "") const;
     void closeFunc();
     
     // Handle identation
@@ -28,20 +28,22 @@ public:
     string getIdentation() const;
     
     string getFreshRegister(bool is_global = false);
-    string setReg(string init_val, type_t val_type);
+    string setReg(const string& init_val, type_t val_type);
 
-    string genStringReg(string str);
-    string genBinop(string reg1, string op, string reg2, type_t op_type);
+    string genStringReg(const string& str);
+    string genBinop(const string& reg1, const string& op, const string& reg2, type_t op_type);
     void genInitialFuncs() const;
     void genFuncDecl(type_t RetType, const string& funcName, vector<type_t> argsTypes) const;
     
     //usage: %res_reg = getelementptr type, type* ptr_reg, i32 0, i32 idx
-    string genGetElementPtr(string type, string ptr_reg, unsigned int idx, bool is_aggregate = false);
+    string genGetElementPtr(const string& type, const string& ptr_reg, unsigned int idx, bool is_aggregate = false);
     string genAllocVar();
     string genGetVar(const string& varName);
-    void genLoad(string dst_reg, string type, string src_ptr);
-    void genStore(string type, string src_reg, string dst_ptr);
-    void genStoreValInVar(string varName, string reg);
+    void genLoad(const string& dst_reg, const string& type, const string& src_ptr);
+    void genStore(const string& type, const string& src_reg, const string& dst_ptr);
+    void genStoreValInVar(const string& varName, const string& reg);
+    string genCallFunc(const string& funcName, vector<string> args = vector<string>{}); 
+    string genCasting(const string& reg, type_t src_type, type_t dst_type);
 };
 
 

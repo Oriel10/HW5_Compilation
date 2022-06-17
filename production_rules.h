@@ -1,5 +1,5 @@
-#ifndef _COMPILER_IMPL_
-#define _COMPILER_IMPL_
+#ifndef _PRODUCTION_RULES_
+#define _PRODUCTION_RULES_
 
 #include "semantic_analizer.h"
 #include <iostream>
@@ -46,7 +46,6 @@ struct Node{
     virtual ~Node() {};
 };
 
-
 struct Program : public Node{
     Program(Funcs*); //Program -> Funcs
     ~Program() = default;
@@ -91,6 +90,7 @@ struct FormalDecl : public Node{
     ~FormalDecl() = default;
     string m_name;
     type_t m_type;
+    int lineno;
 };
 
 struct Statements : public Node{
@@ -121,6 +121,7 @@ struct Statement : public Node{
 
 struct Call : public Node{
     type_t m_type;
+    string m_ret_reg;
     Call(Node* ID, ExpList*); // Call -> ID LP ExpList RP
     Call(Node* ID); // Call -> ID LP RP
     ~Call() = default;
@@ -128,6 +129,7 @@ struct Call : public Node{
 
 struct ExpList : public Node{
     vector<type_t> m_exp_list_types;
+    vector<string> m_exp_list_regs;
     ExpList(Exp*); // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥p
     ExpList(Exp*, ExpList*); // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝 𝐶𝑂𝑀𝑀𝐴 𝐸𝑥𝑝𝐿𝑖𝑠 
     ~ExpList() = default;
@@ -143,7 +145,7 @@ struct Exp : public Node{
     //save type here?
     type_t m_type;
     string m_reg;
-    Exp(Exp*); // Exp -> LP Exp RP
+    Exp(Node*, Exp*, Node*); // Exp -> LP Exp RP
     Exp(Exp*, Node* , Exp*); // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
     Exp(Node*); // Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}
     Exp(Node*, Node*); // Exp -> NUM B
@@ -157,9 +159,10 @@ struct Exp : public Node{
     // Exp(Exp*, Node* OR, Exp*);
     // Exp(Exp*, Node* RELOP, Exp*);
     Exp(Type*, Exp*); // Exp -> LP Type RP Exp
+    Exp(Exp*); // Bool_Exp -> Exp
 
     ~Exp() = default;
 };
 
 
-#endif //COMPILER_IMPL
+#endif //PRODUCTION_RULES

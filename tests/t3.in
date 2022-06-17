@@ -1,16 +1,25 @@
 // simple test
 
-void main()
-{
-   return;
+
+byte foo(byte x, byte y){
+    byte z = x + y;
+    byte w = x;
+    byte a = w;
+    return x + y;
 }
 
-int foo(int x, int y){
-    int z = x + y;
-    int w = x;
-    int a = w;
-
-    int h = 7*a;
-
-    return w;
+void main()
+{
+    //byte x=2b;
+    //byte y=3b;
+    //byte z = foo(x,y);
+    //int w = (int) z;
+    //print("w = ");
+    //printi(w);
+au    
+    byte id = 200b;
+    int f;
+    f = id;
+    printi(f);
+    return;
 }

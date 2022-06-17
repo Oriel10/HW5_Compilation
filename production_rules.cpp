@@ -38,7 +38,7 @@ void endCompiler()
     PLOGI << "End compiler";
 }
 
-/*================ Classes implementation ===================*/
+/*================ Production rules implementation ===================*/
 
 // FuncDecl -> RetType ID LP Formals RP LB Statements RB
 FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
@@ -92,6 +92,7 @@ FormalDecl::FormalDecl(Type* type, Node* id){
     ASSERT_2ARGS(type, id);
     m_name = id->lexeme;
     m_type = type->m_type;
+    lineno = id -> lineno;
 } 
 
 FormalsList::FormalsList(FormalDecl* formal_decl)
@@ -103,6 +104,11 @@ FormalsList::FormalsList(FormalDecl* formal_decl)
 FormalsList::FormalsList(FormalDecl* formal_decl, FormalsList* formal_decls)
 {   
     ASSERT_2ARGS(formal_decl, formal_decls);
+    for(int i = 0; i < formal_decls->m_formal_decls.size(); i++){
+        if(formal_decls->m_formal_decls[i]->m_name == formal_decl->m_name){
+            ERROR(output::errorDef(formal_decl->lineno, formal_decl->m_name));
+        }
+    }
     m_formal_decls.push_back(formal_decl);
     auto& vec = formal_decls->m_formal_decls;
     m_formal_decls.insert( m_formal_decls.end(), vec.begin(), vec.end());
@@ -111,18 +117,22 @@ FormalsList::FormalsList(FormalDecl* formal_decl, FormalsList* formal_decls)
 Formals::Formals(FormalsList* formal_list) : m_formal_decls(formal_list->m_formal_decls){}
 
 // Call -> ID LPAREN ExpList RPAREN
-Call::Call(Node* func_id, ExpList* exp_list){
+Call::Call(Node* func_id, ExpList* exp_list)
+{
     ASSERT_2ARGS(func_id, exp_list);
+
+    //Semantic analasis
     lineno = exp_list->lineno;
     const SymbolTableEntry* id_p = findIdentifier(func_id->lexeme);
-    if(id_p->m_symbol_type != symbol_type_t::FUNC){
-        ERROR(output::errorUndefFunc(yylineno, id_p->m_name));
-    }
     //id doesnt exist or it's not a function
     if(!id_p || id_p->m_symbol_type != FUNC){
         ERROR(output::errorUndefFunc(yylineno, func_id->lexeme));
     }
+    if(id_p->m_symbol_type != symbol_type_t::FUNC){
+        ERROR(output::errorUndefFunc(yylineno, id_p->m_name));
+    }
     m_type = id_p->m_ret_type;
+
 
     bool is_error = false;
     if(exp_list->m_exp_list_types.size() != id_p->m_args_types.size()){
@@ -144,11 +154,17 @@ Call::Call(Node* func_id, ExpList* exp_list){
     if(is_error){
         ERROR(output::errorPrototypeMismatch(yylineno, func_id->lexeme, f_args_types_string));
     }
+
+    //llvm generation
+    m_ret_reg = llvm_inst.genCallFunc(func_id->lexeme, exp_list->m_exp_list_regs);
 }
 
 // Call -> ID LP RP
-Call::Call(Node* func_id){
+Call::Call(Node* func_id)
+{
     ASSERT_ARG(func_id);
+    
+    //Semantic analasis
     lineno = func_id->lineno;
     const SymbolTableEntry* id_p = findIdentifier(func_id->lexeme);
     //id doesnt exist or it's not a function
@@ -156,6 +172,9 @@ Call::Call(Node* func_id){
         ERROR(output::errorUndefFunc(yylineno, func_id->lexeme));
     }
     m_type = id_p->m_ret_type;
+
+    //llvm generation
+    m_ret_reg = llvm_inst.genCallFunc(func_id->lexeme);
 }
 
 // Statement - >Type ID SC 
@@ -178,6 +197,8 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
 {
     ASSERT_3ARGS(type, id, exp);
     if(!automaticCastValidity(type->m_type, exp->m_type)){
+        PLOGD << id->lexeme << " type: " << types_dict[type->m_type] <<
+                    ", " << exp->lexeme << " type: " << std::to_string(exp->m_type);
         ERROR(output::errorMismatch(yylineno));
     }
     if(findIdentifier(id->lexeme)){
@@ -187,7 +208,7 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
 
     //llvm generation
-    llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
+    llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type) );
 }
 
 // Statement -> AUTO ID ASSIGN Exp SC
@@ -197,7 +218,7 @@ Statement::Statement(Node* auto_token, Node* id, Exp* exp)
     if(findIdentifier(id->lexeme)){
         ERROR(output::errorDef(yylineno,id->lexeme));
     }
-    if(exp->m_type == VOID_T){
+    if(exp->m_type == VOID_T || exp->m_type == STRING_T){
         ERROR(output::errorMismatch(yylineno));
     }
     assert(tables_stack.size());
@@ -217,12 +238,12 @@ Statement::Statement(Node* id, Exp* exp)
         ERROR(output::errorUndef(yylineno, id->lexeme));
     }
     assert(var->m_symbol_type != symbol_type_t::FUNC);
-    if (!automaticCastValidity(exp->m_type, var->m_type)){
-        ERROR(output::errorMismatch(yylineno));
+    if (!automaticCastValidity(var->m_type, exp->m_type)){
+            ERROR(output::errorMismatch(yylineno));
     }
 
     //llvm generation
-    llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
+    llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, var->m_type) );
 }
 
 // Statement -> Call SC
@@ -237,9 +258,9 @@ Statement::Statement(Call* call)
 Statement::Statement(Node* node, Exp* exp, Statement* statement){
     //statement arg is just to make this c'tor unique
     ASSERT_3ARGS(node, exp, statement);
-    if(exp->m_type != BOOL_T){
-        ERROR(output::errorMismatch(exp->lineno));
-    }
+    // if(exp->m_type != BOOL_T){
+    //     ERROR(output::errorMismatch(exp->lineno));
+    // }
 }
 
 // Statement -> IF LP Exp RP Statement Else Statement
@@ -293,7 +314,8 @@ Statement::Statement(Exp* exp){
 Exp::Exp(Call* call){
     ASSERT_ARG(call);
     lineno = call->lineno;
-    m_type = call->m_type; 
+    m_type = call->m_type;
+    m_reg = call->m_ret_reg;
 }
 
 // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝
@@ -302,6 +324,7 @@ ExpList::ExpList(Exp* exp)
     ASSERT_ARG(exp);
     lineno = exp->lineno;
     m_exp_list_types.push_back(exp->m_type);
+    m_exp_list_regs.push_back(exp->m_reg);
 }
 
 // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝 𝐶𝑂𝑀𝑀𝐴 𝐸𝑥𝑝𝐿𝑖𝑠𝑡
@@ -310,16 +333,29 @@ ExpList::ExpList(Exp* exp, ExpList* exp_list)
     ASSERT_2ARGS(exp, exp_list);
     lineno = exp_list->lineno;
     m_exp_list_types.push_back(exp->m_type);
-    auto& vec = exp_list->m_exp_list_types;
-    m_exp_list_types.insert( m_exp_list_types.end(), vec.begin(), vec.end());
+    auto& tmp_vec1 = exp_list->m_exp_list_types;
+    m_exp_list_types.insert( m_exp_list_types.end(), tmp_vec1.begin(), tmp_vec1.end());
+
+    m_exp_list_regs.push_back(exp->m_reg);
+    auto& tmp_vec2 = exp_list->m_exp_list_regs;
+    m_exp_list_regs.insert( m_exp_list_regs.end(), tmp_vec2.begin(), tmp_vec2.end());
 }
 
 // Exp -> LP Exp RP
-Exp::Exp(Exp* other_exp){
+Exp::Exp(Node* LP, Exp* other_exp, Node* RP){
     ASSERT_ARG(other_exp);
     lineno = other_exp->lineno;
     m_type = other_exp->m_type;
     m_reg = other_exp->m_reg;
+}
+
+// Bool_Exp -> Exp
+Exp::Exp(Exp* bool_exp){
+    ASSERT_ARG(bool_exp);
+    if (bool_exp->m_type != BOOL_T){
+        ERROR(output::errorMismatch(bool_exp->lineno));
+    }
+    
 }
 
 // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
@@ -364,7 +400,7 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
 
 // Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}
 Exp::Exp(Node* node){
-    PLOGI << "Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}";
+    PLOGI << "Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: " + node->lexeme;
     ASSERT_ARG(node);
     lineno = node->lineno;
     if(node->token_type == "ID"){
@@ -374,6 +410,7 @@ Exp::Exp(Node* node){
             this->lexeme = id_p->m_name;
             m_type = id_p->m_type;
             m_reg = llvm_inst.genGetVar(node->lexeme);
+            PLOGI << "Register of " << node->lexeme << " is: " << m_reg;
             return;
         }    
         ERROR(output::errorUndef(yylineno, node->lexeme));      
@@ -419,11 +456,15 @@ Exp::Exp(Node* node, Node* B)
 // 𝐸𝑥𝑝 → 𝐿𝑃𝐴𝑅𝐸𝑁 𝑇𝑦𝑝𝑒 𝑅𝑃𝐴𝑅𝐸𝑁 𝐸𝑥p
 Exp::Exp(Type* type, Exp* exp){
     ASSERT_2ARGS(type, exp);
+    PLOGD << types_dict[type->m_type] << ", " << types_dict[exp->m_type];
     lineno = exp->lineno;
     if (!explicitCastValidity(type->m_type, exp->m_type)){
         ERROR(output::errorMismatch(yylineno));
     }
-    exp->m_type = type->m_type; 
+    m_type = type->m_type;
+
+    //llvm generation
+    m_reg = llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type);
 }
 
 // 𝐸𝑥𝑝 → 𝑁𝑂𝑇 𝐸𝑥p
@@ -434,4 +475,5 @@ Exp::Exp(Node* NOT, Exp* exp){
         ERROR(output::errorMismatch(yylineno));
     }
     m_type = exp->m_type;
+
 }

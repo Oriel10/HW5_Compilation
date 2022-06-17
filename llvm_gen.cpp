@@ -52,7 +52,7 @@ std::string llvmGen::getIdentation() const
     return res;
 }
 
-string llvmGen::setReg(string init_val, type_t val_type){
+string llvmGen::setReg(const string& init_val, type_t val_type){
     assert(val_type != STRING_T);
     string llvm_type = CFanToLlvmTypesMap[val_type];
     string reg = getFreshRegister();
@@ -62,7 +62,7 @@ string llvmGen::setReg(string init_val, type_t val_type){
     return reg;
 }
 
-string llvmGen::genStringReg(string str){
+string llvmGen::genStringReg(const string& str){
     string g_reg = getFreshRegister(true);
     int str_len = str.length();
     string res = g_reg + " = constant [" + to_string(str_len-1) + " x i8] c\"" + str.substr(1,str.length()-2) + "\\00\"\n";
@@ -71,7 +71,7 @@ string llvmGen::genStringReg(string str){
     return g_reg;
 }
 
-string llvmGen::genBinop(string reg1, string op, string reg2, type_t op_type){
+string llvmGen::genBinop(const string& reg1, const string& op, const string& reg2, type_t op_type){
     string res_reg = getFreshRegister();
     // %vari = op type %reg1, %reg2 
     //TODO: handle dev by 0 - create a label to deal with it?
@@ -81,10 +81,10 @@ string llvmGen::genBinop(string reg1, string op, string reg2, type_t op_type){
     return res_reg;
 }
 
-int llvmGen::llvmEmit(const string& str) const
+int llvmGen::llvmEmit(const string& str, const string& comment) const
 {
     PLOGI << "emit the command: "<< str;
-    return m_cb->emit(getIdentation() + str);
+    return m_cb->emit(getIdentation() + str + comment);
 }
 
 std::string llvmGen::getFreshRegister(bool is_global){
@@ -140,7 +140,7 @@ void llvmGen::genInitialFuncs() const
     llvmEmit("");
 }
 
-string llvmGen::genGetElementPtr(string type, string ptr_reg, unsigned int offset, bool is_aggregate)
+string llvmGen::genGetElementPtr(const string& type, const string& ptr_reg, unsigned int offset, bool is_aggregate)
 {   string res_reg = getFreshRegister();
     //%spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
     string to_emit;
@@ -178,7 +178,6 @@ string llvmGen::genAllocVar()
     const auto& var = getFreshRegister();
     llvmEmit(var + " = alloca i32");
     genStore("i32", "0", var);
-    // llvmEmit("store i32 0, i32* " + var);
     return var;
 }
 
@@ -187,7 +186,7 @@ string llvmGen::genGetVar(const string& varName)
     PLOGI << "Generating genGetVar commands";
 
     auto& curr_table = tables_stack.back();
-    int offset = curr_table.GetVarOffsetByName(varName);
+    int offset = curr_table.getVarOffsetByName(varName);
     bool is_arg = offset < 0;
     if(is_arg){
         offset = -offset;
@@ -196,46 +195,96 @@ string llvmGen::genGetVar(const string& varName)
     llvmEmit("");
     //%vari = getelementptr i32, i32* %frame_ptr, i32 offset
     string src_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
-    // llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
     auto var_value = getFreshRegister();
     //%varj = load i32, i32* %vari
-    // llvmEmit(var_value + " = load i32, i32* " + src_ptr);
     genLoad(var_value, "i32", src_ptr);
     
-    type_t varType = curr_table.GetVarTypeByName(varName);
+    type_t varType = curr_table.getVarTypeByName(varName);
     if (varType == type_t::INT_T){
         return var_value;
     }
     else{
+        // std::TODO: check string type
         string casted_reg = getFreshRegister();
-        llvmEmit(casted_reg + "trunc i32 " + var_value + " to " + CFanToLlvmTypesMap[varType]);
+        llvmEmit(casted_reg + " = trunc i32 " + var_value + " to " + CFanToLlvmTypesMap[varType]);
         return casted_reg;
     }
 }
 
-void llvmGen::genLoad(string dst_reg, string type, string src_ptr){
+void llvmGen::genLoad(const string& dst_reg, const string& type, const string& src_ptr){
     llvmEmit(dst_reg + " = load " + type + ", " + type + "* " + src_ptr);
 }
 
-void llvmGen::genStore(string type, string src_val, string dst_ptr){
+void llvmGen::genStore(const string& type, const string& src_val, const string& dst_ptr){
     llvmEmit("store " + type + " " + src_val + ", " + type + "* " + dst_ptr);
 }
 
+
+// int x = 5b;
 //TODO: support diffrenet types
-//TODO: check offest
-void llvmGen::genStoreValInVar(string varName, string src_reg)
+void llvmGen::genStoreValInVar(const string& varName /*i32*/, const string& src_reg /*i8*/)
 {
-    PLOGI << "Generating store command";
-    PLOGI << varName << ", " << src_reg;
-    PLOGI << "tables_stack size: " << tables_stack.size();
+    PLOGI << "Generating store command with: " << varName << ", " << src_reg;
 
     auto& curr_table = tables_stack.back();
-    int offset = curr_table.GetVarOffsetByName(varName);
+    int offset = curr_table.getVarOffsetByName(varName);
+    type_t var_type = curr_table.getVarTypeByName(varName);
 
-     PLOGI << "After GetVarOffsetByName func";
-    // auto ptr = getFreshRegister();
     string dst_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
-    // llvmEmit(ptr + " = getelementptr i32, i32* %frame_ptr, i32 " + std::to_string(offset));
-    // llvmEmit("store i32 " + src_reg + ", i32* " + dst_ptr);
-    genStore("i32", src_reg, dst_ptr);
+
+    genStore("i32", genCasting(src_reg, var_type, type_t::INT_T), dst_ptr);
+
+}
+
+string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
+{
+    auto& curr_table = tables_stack.front(); //global table
+    auto types_pair = curr_table.getFuncRetTypeAndArgsTypesByName(funcName);
+    type_t ret_type = types_pair.first;
+    auto& args_types = types_pair.second;
+    for (size_t i=0; i < args_regs.size(); i++){
+        args_regs[i].insert(0, CFanToLlvmTypesMap.at(args_types[i]) + " ");
+    }
+
+    std::ostringstream sperated_args_list;
+    std::copy(args_regs.begin(),
+              args_regs.end(),
+              std::experimental::make_ostream_joiner(sperated_args_list,", "));
+    
+    if (ret_type == type_t::VOID_T){
+        //%vari = call i32 @test(i32 2)
+        llvmEmit("call " + CFanToLlvmTypesMap.at(ret_type) +
+                    " @" + funcName + "(" + sperated_args_list.str() + ")");  
+        return ""; //Souldn't be used         
+    }
+    else{
+        string ret_val_reg = getFreshRegister();
+        //call i32 @test(i32 2)
+        llvmEmit(ret_val_reg + " = call " + CFanToLlvmTypesMap.at(ret_type) +
+                    " @" + funcName + "(" + sperated_args_list.str() + ")");
+        return ret_val_reg;
+    }
+}
+
+string llvmGen::genCasting(const string& reg, type_t src_type, type_t dst_type)
+{
+        if (src_type == dst_type){
+            return reg;
+        }
+
+        auto casted_reg = getFreshRegister();
+
+        if(src_type == type_t::INT_T && dst_type == type_t::BYTE_T){
+            llvmEmit(casted_reg + " = trunc i32 " + reg + " to i8");
+        }
+        else if(dst_type == type_t::INT_T && src_type == type_t::BYTE_T){
+            llvmEmit(casted_reg + " = zext i8 " + reg + " to i32");
+        }
+        else{
+            PLOGF << "Casting is available only with int and byte types.";
+            return "%failedCasting";  //Souldn't be used 
+        }
+
+        return casted_reg;
+    
 }
