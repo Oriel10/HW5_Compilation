@@ -33,7 +33,7 @@ struct FormalsList;
 struct FormalDecl;
 struct Statements;
 struct Statement;
-struct StatementMarker;
+struct NextInstMarker;
 struct IfMarker;
 struct Call;
 struct ExpList;
@@ -96,21 +96,21 @@ struct FormalDecl : public Node{
     int lineno;
 };
 
-struct StatementMarker : public Node{
+struct NextInstMarker : public Node{
     string m_label = "";
-    StatementMarker(string);
+    NextInstMarker(string);
 };
 
 struct Statements : public Node{
     vector<Statement*> m_statement_list;
     Statements() = default;
-    Statements(/*StatementMarker* statement_marker, */ Statement*); // Statements -> M Statement
-    Statements(Statements*, StatementMarker*, Statement*); // Statements -> Statements M Statement
+    Statements(/*NextInstMarker* statement_marker, */ Statement*); // Statements -> M Statement
+    Statements(Statements*, NextInstMarker*, Statement*); // Statements -> Statements M Statement
     ~Statements() = default;
 };
 
 struct Statement : public Node{
-    string m_label = "";
+    string m_label = ""; //start label for the statement 
     vector<pair<int,BranchLabelIndex>> m_next_list;
     Statement() = default;
     Statement(Statements*); // Statement -> LB Statements RB

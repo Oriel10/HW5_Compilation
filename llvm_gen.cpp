@@ -8,6 +8,7 @@
 #include <utility>
 
 extern vector<SymbolTable> tables_stack;
+extern Dict types_dict;
  
 
 std::map<type_t, string>
@@ -168,6 +169,7 @@ string llvmGen::genGetElementPtr(const string& type, const string& ptr_reg, unsi
         to_emit = res_reg + " = getelementptr " + type +", " + type + "*" + ptr_reg +  "i32 0, i32 " + to_string(offset);
     }
     llvmEmit(to_emit);
+    PLOGI << to_emit;
     return res_reg;
 }
 
@@ -314,7 +316,7 @@ string llvmGen::genCasting(const string& reg, type_t src_type, type_t dst_type)
             llvmEmit(casted_reg + " = zext i8 " + reg + " to i32");
         }
         else{
-            PLOGF << "Casting is available only with int and byte types.";
+            PLOGF << "Casting is available only with int and byte types."<<"(src_t: " << types_dict[src_type]<<", dst_t: " << types_dict[dst_type]<<")";
             return "%failedCasting";  //Souldn't be used 
         }
 

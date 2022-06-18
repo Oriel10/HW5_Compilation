@@ -108,19 +108,19 @@ FormalDecl :
 
 Statements :
         Statement                               {PLOGD << prodRule(12);
-                                                $$ = new Statements(/*dynamic_cast<StatementMarker*>($1),*/ dynamic_cast<Statement*>($1));             }
-    |   Statements StatementMarker Statement    {PLOGD << prodRule(13);
-                                                $$ = new Statements(dynamic_cast<Statements*>($1), dynamic_cast<StatementMarker*>($2), dynamic_cast<Statement*>($3));             }
+                                                $$ = new Statements(/*dynamic_cast<NextInstMarker*>($1),*/ dynamic_cast<Statement*>($1));             }
+    |   Statements NextInstMarker Statement    {PLOGD << prodRule(13);
+                                                $$ = new Statements(dynamic_cast<Statements*>($1), dynamic_cast<NextInstMarker*>($2), dynamic_cast<Statement*>($3));             }
 ;
 
-StatementMarker:
+NextInstMarker:
         /*epsilon*/                             {PLOGD << prodRule(49); 
-                                                $$ = new StatementMarker(CodeBuffer::instance().genLabel());}
+                                                $$ = new NextInstMarker(CodeBuffer::instance().genLabel());}
 ;
 
 Statement :
         LBRACE M Statements RBRACE             {PLOGD << prodRule(14);
-                                                $$ = new Statement();
+                                                $$ = new Statement(dynamic_cast<Statements*>($3));
                                                 closeScope();                   }
     |   Type ID SC                             {PLOGD << prodRule(15);
                                                 $$ = new Statement(dynamic_cast<Type*>($1), $2);}
@@ -223,10 +223,10 @@ Exp :
                                                 $$ = new Exp($1);                   }
     |   NOT Exp                                {PLOGD << prodRule(43);
                                                 $$ = new Exp($1, dynamic_cast<Exp*>($2));}
-    |   Exp AND Exp                            {PLOGD << prodRule(44);
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
-    |   Exp OR Exp                             {PLOGD << prodRule(45);
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp AND NextInstMarker Exp                            {PLOGD << prodRule(44);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($4));}
+    |   Exp OR NextInstMarker Exp                             {PLOGD << prodRule(45);
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($4));}
     |   Exp RELOP_EQ Exp                       {PLOGD << prodRule(46);
                                                 $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
     |   Exp RELOP_SIZE Exp                     {PLOGD << prodRule(46);

@@ -87,6 +87,8 @@ RetType::RetType(Node* type){
 // Type -> INT/BYTE/BOOL
 Type::Type(Node* type){
     ASSERT_ARG(type);
+    PLOGD<<"type->token_type: "<< type->token_type;
+    PLOGD<<"types_dict[type->token_type]: "<< types_dict[type->token_type];
     m_type = types_dict[type->token_type];
 }
 
@@ -182,7 +184,7 @@ Call::Call(Node* func_id)
 }
 
 // Statements -> M Statement
-Statements::Statements(/*StatementMarker* statement_marker, */Statement* statement)
+Statements::Statements(/*NextInstMarker* statement_marker, */Statement* statement)
 {
     ASSERT_ARG(statement);
     m_statement_list.clear();
@@ -190,7 +192,7 @@ Statements::Statements(/*StatementMarker* statement_marker, */Statement* stateme
 }
 
 // Statements -> Statements M Statement
-Statements::Statements(Statements* statements, StatementMarker* statement_marker, Statement* statement)
+Statements::Statements(Statements* statements, NextInstMarker* statement_marker, Statement* statement)
 {
     ASSERT_3ARGS(statements, statement_marker, statement);
     statement->m_label = statement_marker->m_label;
@@ -199,7 +201,14 @@ Statements::Statements(Statements* statements, StatementMarker* statement_marker
     m_statement_list.push_back(statement);
 }
 
-// Statement - >Type ID SC 
+// Statement -> LBRACE Statements RBRACE
+Statement::Statement(Statements* statements){
+    PLOGI<< "Statement -> LB Statements RB";
+    Statement* last_statement = statements->m_statement_list.back();
+    m_next_list = last_statement->m_next_list;
+}
+
+// Statement -> Type ID SC 
 Statement::Statement(Type* type, Node* id)
 {
     ASSERT_2ARGS(type, id);
@@ -401,9 +410,14 @@ Exp::Exp(Exp* bool_exp){
         ERROR(output::errorMismatch(bool_exp->lineno));
     }
 
+    m_type = BOOL_T;
     //llvm generation
+    m_reg = bool_exp->m_reg;
     m_true_list = bool_exp->m_true_list;
-    m_false_list = bool_exp->m_false_list;   
+    m_false_list = bool_exp->m_false_list;  
+    // PLOGD << "bool_exp->m_true_list.size(): " << bool_exp->m_true_list.size();
+    // PLOGD << "bool_exp->m_false_list.size(): " << bool_exp->m_false_list.size();
+    llvm_inst.genCondBranch(bool_exp->m_reg, m_true_list[0], m_false_list[0]);
     
 }
 
@@ -417,6 +431,9 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         if(exp1->m_type != BOOL_T || exp2->m_type != BOOL_T){
             ERROR(output::errorMismatch(yylineno));            
         }
+
+        //llvm generation
+        
     }
     else if(node->token_type == "RELOP_EQ" || node->token_type == "RELOP_SIZE"){
         //semantic analysis
@@ -431,7 +448,7 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         //llvm generation
         m_reg = llvm_inst.genCompare(exp1->m_reg, node->lexeme, exp2->m_reg, exp1->m_type);
         pair<int,BranchLabelIndex> true_list_item, false_list_item;
-        llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
+        // llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
         m_true_list = CodeBuffer::makelist(true_list_item);
         m_false_list = CodeBuffer::makelist(false_list_item);
 
@@ -534,6 +551,6 @@ Exp::Exp(Node* NOT, Exp* exp){
     m_type = exp->m_type;
 }
 
-StatementMarker::StatementMarker(string label) : m_label(label){}
+NextInstMarker::NextInstMarker(string label) : m_label(label){}
 
 IfMarker::IfMarker(string label) : m_label(label){}

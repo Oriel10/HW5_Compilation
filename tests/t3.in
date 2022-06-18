@@ -2,30 +2,38 @@
 
 int goo(){
     int x = 2;
+    return x;
 }
 
-byte foo(byte x, byte y){
-    byte z;
-    z = x + y;
-    byte w = x;
-    byte a = w;
-    //return x + y;
-}
+//byte foo(byte x, byte y){
+//    byte z = x + y;
+//    //z = x + y;
+//    //byte w = x;
+//    //byte a = w;
+//    return x + y;
+//}
 
 void main()
-{
-    int h =0;
-    byte x=2b;
+{   
+    // segmentation fault case:
+    //bool z = true;
+    //if(z){
+    //    int x = 3;
+    //}
+    //return;
+    
+    //int h = 0;
+    //byte x=2b;
 
-    if (3>2)
-        x=3b;
-
-
-    byte id = 200b;
-    int f;
-    f = id;
-    printi(f);
-    return;
+    if (3>2){
+        byte x2=3b;
+    }
+    bool x = 3>2;
+    //byte id = 200b;
+    //int f;
+    //f = id;
+    //printi(f);
+    //return;
 }
 
 
