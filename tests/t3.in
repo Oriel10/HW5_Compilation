@@ -1,5 +1,8 @@
 // simple test
 
+int goo(){
+    int x = 2;
+}
 
 byte foo(byte x, byte y){
     byte z;
@@ -11,12 +14,12 @@ byte foo(byte x, byte y){
 
 void main()
 {
-    //byte x=2b;
-    //byte y=3b;
-    //byte z = foo(x,y);
-    //int w = (int) z;
-    //print("w = ");
-    //printi(w);
+    int h =0;
+    byte x=2b;
+
+    if (3>2)
+        x=3b;
+
 
     byte id = 200b;
     int f;
@@ -24,3 +27,5 @@ void main()
     printi(f);
     return;
 }
+
+

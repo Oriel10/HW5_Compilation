@@ -107,10 +107,15 @@ FormalDecl :
 ;
 
 Statements :
-        Statement                              {PLOGD << prodRule(12);
-                                                $$ = new Statements();             }
-    |   Statements Statement                   {PLOGD << prodRule(13);
-                                                $$ = new Statements();             }
+        Statement                               {PLOGD << prodRule(12);
+                                                $$ = new Statements(/*dynamic_cast<StatementMarker*>($1),*/ dynamic_cast<Statement*>($1));             }
+    |   Statements StatementMarker Statement    {PLOGD << prodRule(13);
+                                                $$ = new Statements(dynamic_cast<Statements*>($1), dynamic_cast<StatementMarker*>($2), dynamic_cast<Statement*>($3));             }
+;
+
+StatementMarker:
+        /*epsilon*/                             {PLOGD << prodRule(49); 
+                                                $$ = new StatementMarker(CodeBuffer::instance().genLabel());}
 ;
 
 Statement :
@@ -131,11 +136,11 @@ Statement :
                                                 $$ = new Statement($1);         }
     |   RETURN Exp SC                          {PLOGD << prodRule(21);
                                                 $$ = new Statement(dynamic_cast<Exp*>($2));}
-    |   IF LPAREN BOOL_EXP RPAREN M 
+    |   IF LPAREN BOOL_EXP RPAREN IfMarker 
         Statement %prec IF                     {PLOGD << prodRule(22);
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<IfMarker*>($5), dynamic_cast<Statement*>($6));
                                                 closeScope();                   }
-    |   IF LPAREN BOOL_EXP RPAREN M 
+    |   IF LPAREN BOOL_EXP RPAREN IfMarker 
         Statement ELSE M2 Statement            {PLOGD << prodRule(23);
                                                 $$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
                                                 closeScope();}
@@ -154,6 +159,13 @@ M :
         /*epsilon*/                            {PLOGD << prodRule(48); 
                                                 openScope();                   }
 ;
+
+IfMarker :
+        /*epsilon*/                            {PLOGD << prodRule(48);
+                                                $$ = new IfMarker(CodeBuffer::instance().genLabel()); 
+                                                openScope();                   }
+;
+
 
 M2 :
         /*epsilon*/                            {PLOGD << prodRule(49); 

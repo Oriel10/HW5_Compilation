@@ -29,6 +29,19 @@ std::map<pair<string, type_t>, string>
     {pair<string, type_t>("/", BYTE_T), "udiv i8"}, 
     {pair<string, type_t>("+", BYTE_T), "add i8"},
     {pair<string, type_t>("-", BYTE_T), "sub i8"},
+    {{"==", INT_T}, "eq i32"},
+    {{"==", BYTE_T}, "eq i8"},
+    {{"!=", INT_T}, "ne i32"},
+    {{"!=", BYTE_T}, "ne i8"},
+    {{">", INT_T}, "sgt i32"},
+    {{">", BYTE_T}, "ugt i8"},
+    {{">=", INT_T}, "sge i32"},
+    {{">=", BYTE_T}, "uge i8"},
+    {{"<", INT_T}, "slt i32"},
+    {{"<", BYTE_T}, "ult i8"},
+    {{"<=", INT_T}, "sle i32"},
+    {{"<=", BYTE_T}, "ule i8"},
+
 };
 
 
@@ -76,7 +89,6 @@ string llvmGen::genBinop(const string& reg1, const string& op, const string& reg
     // %vari = op type %reg1, %reg2 
     //TODO: handle dev by 0 - create a label to deal with it?
     //%vari = op type %var1, %var2
-    llvmEmit("");
     string to_emit = res_reg + " = " + CFanToLlvmOPsMap[pair<string, type_t>(op, op_type)] + " " + reg1 + ", " + reg2; 
     llvmEmit(to_emit);
     return res_reg;
@@ -86,7 +98,8 @@ int llvmGen::llvmEmit(const string& str, const string& comment) const
 {
     PLOGI << "Emitting command: "<< str;
     string comment_prefix = comment.empty() ? "" : ";";
-    return m_cb->emit(getIdentation() + str + comment_prefix + comment);
+    string tab = str.empty() ? "" : "      ";
+    return m_cb->emit(getIdentation() + str + tab + comment_prefix + comment);
 }
 
 std::string llvmGen::getFreshRegister(bool is_global){
@@ -171,7 +184,6 @@ void llvmGen::zeroIdentation(){
 void llvmGen::closeFunc(){
     if(!tables_stack.back().is_return_appeared){
         SymbolTableEntry& curr_func = tables_stack[0].m_entries.back();
-        llvmEmit("");
         if (curr_func.m_ret_type == type_t::VOID_T){
             llvmEmit("ret void");
         }
@@ -181,7 +193,6 @@ void llvmGen::closeFunc(){
     }
     zeroIdentation();
     llvmEmit("}\n");
-    // llvmEmit("");
 }
 
 string llvmGen::genAllocVar()
@@ -197,14 +208,13 @@ string llvmGen::genGetVar(const string& varName)
 {
     PLOGI << "Generating genGetVar commands";
 
-    auto& curr_table = tables_stack.back();
-    int offset = curr_table.getVarOffsetByName(varName);
+    auto var_entry = findIdentifier(varName);
+    int offset = var_entry->m_offset;
     bool is_arg = offset < 0;
     if(is_arg){
         offset = -offset;
         return "%" + to_string(--offset);
     }
-    llvmEmit("");
     llvmEmit("", "Getting var " + varName);
     //%vari = getelementptr i32, i32* %frame_ptr, i32 offset
     string src_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
@@ -212,7 +222,7 @@ string llvmGen::genGetVar(const string& varName)
     //%varj = load i32, i32* %vari
     genLoad(var_value, "i32", src_ptr);
     
-    type_t varType = curr_table.getVarTypeByName(varName);
+    type_t varType = var_entry->m_type;
     if (varType == type_t::INT_T){
         return var_value;
     }
@@ -237,11 +247,10 @@ void llvmGen::genStoreValInVar(const string& varName , const string& src_reg, bo
 {
     PLOGI << "Generating store command with: " << varName << ", " << src_reg;
 
-    auto& curr_table = tables_stack.back();
-    int offset = curr_table.getVarOffsetByName(varName);
-    type_t var_type = curr_table.getVarTypeByName(varName);
+    auto var_entry = findIdentifier(varName);
+    int offset = var_entry->m_offset;
+    type_t var_type = var_entry->m_type;
 
-    llvmEmit("");
     if(initial){
         llvmEmit("", "Initializing var " + varName + " to 0");
     }
@@ -260,6 +269,8 @@ void llvmGen::genStoreValInVar(const string& varName , const string& src_reg, bo
 
 string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
 {
+    PLOGI << "Generating call function command of: " << funcName;
+
     auto& curr_table = tables_stack.front(); //global table
     auto types_pair = curr_table.getFuncRetTypeAndArgsTypesByName(funcName);
     type_t ret_type = types_pair.first;
@@ -273,7 +284,6 @@ string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
               args_regs.end(),
               std::experimental::make_ostream_joiner(sperated_args_list,", "));
     
-    llvmEmit("");
     if (ret_type == type_t::VOID_T){
         //%vari = call i32 @test(i32 2)
         llvmEmit("call " + CFanToLlvmTypesMap.at(ret_type) +
@@ -309,5 +319,31 @@ string llvmGen::genCasting(const string& reg, type_t src_type, type_t dst_type)
         }
 
         return casted_reg;
-    
+}
+
+
+string llvmGen::genCompare(const string& reg1, const string& rel_op, const string& reg2, type_t op_type)
+{
+    string res_reg = getFreshRegister();
+    //%vari = icmp relop %varm, %varn
+    llvmEmit(res_reg + " = icmp " + CFanToLlvmOPsMap[{rel_op, op_type}] + " " + reg1 + ", " + reg2);
+    return res_reg;// i1 register
+}
+
+void llvmGen::genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& true_list_item,
+                                           pair<int,BranchLabelIndex>& false_list_item)
+{
+    //br i1 %bool_reg, label @, label @
+    int loc = llvmEmit("br i1 " + bool_reg + ", label @, label @");
+    true_list_item = {loc, BranchLabelIndex::FIRST};
+    false_list_item = {loc, BranchLabelIndex::SECOND};
+    return; 
+}
+
+void llvmGen::genUncondBranch(pair<int,BranchLabelIndex>& list_item)
+{
+    //br label @
+     int loc = llvmEmit("br label @");
+    list_item = {loc, BranchLabelIndex::FIRST};
+    return;   
 }

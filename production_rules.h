@@ -2,6 +2,7 @@
 #define _PRODUCTION_RULES_
 
 #include "semantic_analizer.h"
+#include "bp.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -32,6 +33,8 @@ struct FormalsList;
 struct FormalDecl;
 struct Statements;
 struct Statement;
+struct StatementMarker;
+struct IfMarker;
 struct Call;
 struct ExpList;
 struct Type;
@@ -93,14 +96,22 @@ struct FormalDecl : public Node{
     int lineno;
 };
 
+struct StatementMarker : public Node{
+    string m_label = "";
+    StatementMarker(string);
+};
+
 struct Statements : public Node{
+    vector<Statement*> m_statement_list;
     Statements() = default;
-    Statements(Statement*); // Statements -> Statement
-    Statements(Statements*, Statement*); // Statements -> Statements Statement
+    Statements(/*StatementMarker* statement_marker, */ Statement*); // Statements -> M Statement
+    Statements(Statements*, StatementMarker*, Statement*); // Statements -> Statements M Statement
     ~Statements() = default;
 };
 
 struct Statement : public Node{
+    string m_label = "";
+    vector<pair<int,BranchLabelIndex>> m_next_list;
     Statement() = default;
     Statement(Statements*); // Statement -> LB Statements RB
     Statement(Type*, Node*); // Statement - >Type ID SC 
@@ -110,7 +121,7 @@ struct Statement : public Node{
     Statement(Call*); // Statement -> Call SC
     Statement(Node*); // //Statement -> RETURN SC | BREAK SC | CONTINUE SC
     Statement(Exp*); // Statement -> Return Exp SC
-    Statement(Node* IF_WHILE, Exp*, Statement*); // Statement -> IF_WHILE LP Exp RP Statement
+    Statement(Node* IF_WHILE, Exp*, IfMarker*, Statement*); // Statement -> IF_WHILE LP Exp RP Statement
     Statement(Node* IF, Exp* exp, Node* ELSE); // Statement -> IF_WHILE LP Exp RP Statement Else Statement
     // Statement(Node* WHILE, Exp*, Statement*);
     // Statement(Node* BREAK);
@@ -118,6 +129,12 @@ struct Statement : public Node{
 
     ~Statement() = default;
 };
+
+struct IfMarker : public Node{
+    string m_label = "";
+    IfMarker(string);
+};
+
 
 struct Call : public Node{
     type_t m_type;
@@ -144,6 +161,8 @@ struct Type : public Node{
 struct Exp : public Node{
     type_t m_type;
     string m_reg;
+    vector<pair<int,BranchLabelIndex>> m_true_list;
+    vector<pair<int,BranchLabelIndex>> m_false_list;
     Exp(Node*, Exp*, Node*); // Exp -> LP Exp RP
     Exp(Exp*, Node* , Exp*); // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
     Exp(Node*); // Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}
@@ -162,6 +181,7 @@ struct Exp : public Node{
 
     ~Exp() = default;
 };
+
 
 
 #endif //PRODUCTION_RULES

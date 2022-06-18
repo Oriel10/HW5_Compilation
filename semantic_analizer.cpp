@@ -94,7 +94,7 @@ pair<type_t, vector<type_t>> SymbolTable::getFuncRetTypeAndArgsTypesByName(const
 
 void openScope()
 {   
-    //Semantic analasis
+    //Semantic analysis
     //start of the program
     if(tables_stack.empty()){ 
         SymbolTable global;

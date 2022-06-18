@@ -44,6 +44,11 @@ public:
     void genStoreValInVar(const string& varName, const string& reg,  bool initial=false);
     string genCallFunc(const string& funcName, vector<string> args = vector<string>{}); 
     string genCasting(const string& reg, type_t src_type, type_t dst_type);
+    string genCompare(const string& reg1, const string& rel_op, const string& reg2, type_t op_type);
+    void genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& true_list_item,
+                                           pair<int,BranchLabelIndex>& false_list_item);
+    void genUncondBranch(pair<int,BranchLabelIndex>& list_item);
+
 };
 
 

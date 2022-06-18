@@ -46,7 +46,7 @@ FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
     ASSERT_3ARGS(ret_type, id, formals);
     vector<type_t> args;
 
-    // Semantic analasis
+    // Semantic analysis
     for (const auto& elem : formals->m_formal_decls){
         auto type = elem->m_type;
         args.push_back(type);
@@ -68,7 +68,8 @@ FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
     llvm_inst.genFuncDecl(ret_type->m_type, id->lexeme, args);
     llvm_inst.incIdentation();
     //Allocaing room on stack for local variables
-    llvm_inst.llvmEmit("%frame_ptr = alloca i32, i32 " + std::to_string(llvm_inst.maxNumOfVars));
+    llvm_inst.llvmEmit("%frame_ptr = alloca i32, i32 " + std::to_string(llvm_inst.maxNumOfVars), "Allocating local variables");
+    llvm_inst.llvmEmit("");
 }
 
 // RetType -> Type
@@ -125,7 +126,7 @@ Call::Call(Node* func_id, ExpList* exp_list)
 {
     ASSERT_2ARGS(func_id, exp_list);
 
-    //Semantic analasis
+    //Semantic analysis
     lineno = exp_list->lineno;
     const SymbolTableEntry* id_p = findIdentifier(func_id->lexeme);
     if(id_p->m_symbol_type != symbol_type_t::FUNC){
@@ -167,7 +168,7 @@ Call::Call(Node* func_id)
 {
     ASSERT_ARG(func_id);
     
-    //Semantic analasis
+    //Semantic analysis
     lineno = func_id->lineno;
     const SymbolTableEntry* id_p = findIdentifier(func_id->lexeme);
     //id doesnt exist or it's not a function
@@ -180,11 +181,29 @@ Call::Call(Node* func_id)
     m_ret_reg = llvm_inst.genCallFunc(func_id->lexeme);
 }
 
+// Statements -> M Statement
+Statements::Statements(/*StatementMarker* statement_marker, */Statement* statement)
+{
+    ASSERT_ARG(statement);
+    m_statement_list.clear();
+    m_statement_list.push_back(statement);
+}
+
+// Statements -> Statements M Statement
+Statements::Statements(Statements* statements, StatementMarker* statement_marker, Statement* statement)
+{
+    ASSERT_3ARGS(statements, statement_marker, statement);
+    statement->m_label = statement_marker->m_label;
+    Statement* last_statement = statements->m_statement_list.back();
+    CodeBuffer::instance().bpatch(last_statement->m_next_list, statement->m_label);
+    m_statement_list.push_back(statement);
+}
+
 // Statement - >Type ID SC 
 Statement::Statement(Type* type, Node* id)
 {
     ASSERT_2ARGS(type, id);
-    // Semantic Analisis
+    // Semantic analysis
     if(findIdentifier(id->lexeme)){
         ERROR(output::errorDef(id->lineno,id->lexeme));
     }
@@ -193,6 +212,9 @@ Statement::Statement(Type* type, Node* id)
 
     //llvm generation
     llvm_inst.genStoreValInVar(id->lexeme, "", /*initial*/ true);
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> Type ID ASSIGN Exp SC 
@@ -212,6 +234,9 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
 
     //llvm generation
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type) );
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> AUTO ID ASSIGN Exp SC
@@ -229,6 +254,9 @@ Statement::Statement(Node* auto_token, Node* id, Exp* exp)
 
     //llvm generation
     llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> ID ASSIGN Exp SC
@@ -247,22 +275,31 @@ Statement::Statement(Node* id, Exp* exp)
 
     //llvm generation
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, var->m_type) );
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> Call SC
 Statement::Statement(Call* call)
 {
     ASSERT_ARG(call);
-    // nothing to do
+
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 //Statement -> IF LPAREN Exp RPAREN Statement
 //Statement -> WHILE LPAREN Exp RPAREN Statement
-Statement::Statement(Node* node, Exp* exp, Statement* statement){
+Statement::Statement(Node* node, Exp* exp, IfMarker* if_marker, Statement* statement){
     //statement arg is just to make this c'tor unique
-    ASSERT_3ARGS(node, exp, statement);
-    // do nothing
-
+    ASSERT_4ARGS(node, exp, if_marker, statement);
+    // llvm generation
+    PLOGD << "next list of statement size is : " << statement->m_next_list.size();
+    CodeBuffer::instance().bpatch(exp->m_true_list, if_marker->m_label);
+    m_next_list = CodeBuffer::merge(m_next_list, exp->m_false_list);
+    m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
 }
 
 // Statement -> IF LP Exp RP Statement Else Statement
@@ -280,7 +317,6 @@ Statement::Statement(Node* node){
             ERROR(output::errorMismatch(yylineno));
         }
         tables_stack.back().is_return_appeared = true;
-        llvm_inst.llvmEmit("ret void");
     }
     else if(node->token_type == "BREAK"){
         if (loop_counter == 0){
@@ -291,7 +327,12 @@ Statement::Statement(Node* node){
             ERROR(output::errorUnexpectedContinue(yylineno));
         }
     }
-    
+
+    //llvm generation
+    llvm_inst.llvmEmit("ret void");
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);    
 }
 
 //Statement -> RETURN Exp SC
@@ -305,11 +346,14 @@ Statement::Statement(Exp* exp){
     if(!automaticCastValidity(curr_func.m_ret_type, exp->m_type)){
         ERROR(output::errorMismatch(yylineno));
     }
-    // string ret_res = llvm_inst.setReg(exp->m_reg, exp->m_type);
+
+    //llvm generation
     string to_emit = "ret " + CFanToLlvmTypesMap[exp->m_type] + " " +exp->m_reg;
     llvm_inst.llvmEmit(to_emit);
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    m_next_list = CodeBuffer::makelist(next_list_item);
 }
-
 
 // 𝐸𝑥𝑝 → 𝐶𝑎𝑙𝑙
 Exp::Exp(Call* call){
@@ -356,6 +400,10 @@ Exp::Exp(Exp* bool_exp){
     if (bool_exp->m_type != BOOL_T){
         ERROR(output::errorMismatch(bool_exp->lineno));
     }
+
+    //llvm generation
+    m_true_list = bool_exp->m_true_list;
+    m_false_list = bool_exp->m_false_list;   
     
 }
 
@@ -371,6 +419,7 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         }
     }
     else if(node->token_type == "RELOP_EQ" || node->token_type == "RELOP_SIZE"){
+        //semantic analysis
         m_type = BOOL_T;
         if(exp1->m_type != INT_T && exp1->m_type != BYTE_T){
             ERROR(output::errorMismatch(yylineno));            
@@ -378,6 +427,14 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         if(exp2->m_type != INT_T && exp2->m_type != BYTE_T){
             ERROR(output::errorMismatch(yylineno));            
         }
+
+        //llvm generation
+        m_reg = llvm_inst.genCompare(exp1->m_reg, node->lexeme, exp2->m_reg, exp1->m_type);
+        pair<int,BranchLabelIndex> true_list_item, false_list_item;
+        llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
+        m_true_list = CodeBuffer::makelist(true_list_item);
+        m_false_list = CodeBuffer::makelist(false_list_item);
+
     }
     else if(node->token_type == "BINOP_PLUSMINUS" || node->token_type == "BINOP_MULDIV"){
         if(exp1->m_type != BYTE_T && exp1->m_type != INT_T){
@@ -476,3 +533,7 @@ Exp::Exp(Node* NOT, Exp* exp){
     }
     m_type = exp->m_type;
 }
+
+StatementMarker::StatementMarker(string label) : m_label(label){}
+
+IfMarker::IfMarker(string label) : m_label(label){}
