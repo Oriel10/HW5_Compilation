@@ -67,6 +67,7 @@ FuncDecl::FuncDecl(RetType* ret_type, Node* id, Formals* formals)
     // llvm generation
     llvm_inst.genFuncDecl(ret_type->m_type, id->lexeme, args);
     llvm_inst.incIdentation();
+    //Allocaing room on stack for local variables
     llvm_inst.llvmEmit("%frame_ptr = alloca i32, i32 " + std::to_string(llvm_inst.maxNumOfVars));
 }
 
@@ -88,6 +89,7 @@ Type::Type(Node* type){
     m_type = types_dict[type->token_type];
 }
 
+// FormalDecl -> Type ID
 FormalDecl::FormalDecl(Type* type, Node* id){
     ASSERT_2ARGS(type, id);
     m_name = id->lexeme;
@@ -95,12 +97,14 @@ FormalDecl::FormalDecl(Type* type, Node* id){
     lineno = id -> lineno;
 } 
 
+// FormalsList -> FormalDecl
 FormalsList::FormalsList(FormalDecl* formal_decl)
 {
     ASSERT_ARG(formal_decl);
     m_formal_decls.push_back(formal_decl);
 }
 
+// FormalsList -> FormalDecl COMMA FormalsList
 FormalsList::FormalsList(FormalDecl* formal_decl, FormalsList* formal_decls)
 {   
     ASSERT_2ARGS(formal_decl, formal_decls);
@@ -188,7 +192,7 @@ Statement::Statement(Type* type, Node* id)
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
 
     //llvm generation
-    llvm_inst.genAllocVar();
+    llvm_inst.genStoreValInVar(id->lexeme, "", /*initial*/ true);
 }
 
 // Statement -> Type ID ASSIGN Exp SC 

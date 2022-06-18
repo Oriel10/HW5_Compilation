@@ -41,7 +41,7 @@ public:
     string genGetVar(const string& varName);
     void genLoad(const string& dst_reg, const string& type, const string& src_ptr);
     void genStore(const string& type, const string& src_reg, const string& dst_ptr);
-    void genStoreValInVar(const string& varName, const string& reg);
+    void genStoreValInVar(const string& varName, const string& reg,  bool initial=false);
     string genCallFunc(const string& funcName, vector<string> args = vector<string>{}); 
     string genCasting(const string& reg, type_t src_type, type_t dst_type);
 };

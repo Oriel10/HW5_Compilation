@@ -76,6 +76,7 @@ string llvmGen::genBinop(const string& reg1, const string& op, const string& reg
     // %vari = op type %reg1, %reg2 
     //TODO: handle dev by 0 - create a label to deal with it?
     //%vari = op type %var1, %var2
+    llvmEmit("");
     string to_emit = res_reg + " = " + CFanToLlvmOPsMap[pair<string, type_t>(op, op_type)] + " " + reg1 + ", " + reg2; 
     llvmEmit(to_emit);
     return res_reg;
@@ -83,8 +84,9 @@ string llvmGen::genBinop(const string& reg1, const string& op, const string& reg
 
 int llvmGen::llvmEmit(const string& str, const string& comment) const
 {
-    PLOGI << "emit the command: "<< str;
-    return m_cb->emit(getIdentation() + str + comment);
+    PLOGI << "Emitting command: "<< str;
+    string comment_prefix = comment.empty() ? "" : ";";
+    return m_cb->emit(getIdentation() + str + comment_prefix + comment);
 }
 
 std::string llvmGen::getFreshRegister(bool is_global){
@@ -169,6 +171,7 @@ void llvmGen::zeroIdentation(){
 void llvmGen::closeFunc(){
     if(!tables_stack.back().is_return_appeared){
         SymbolTableEntry& curr_func = tables_stack[0].m_entries.back();
+        llvmEmit("");
         if (curr_func.m_ret_type == type_t::VOID_T){
             llvmEmit("ret void");
         }
@@ -202,6 +205,7 @@ string llvmGen::genGetVar(const string& varName)
         return "%" + to_string(--offset);
     }
     llvmEmit("");
+    llvmEmit("", "Getting var " + varName);
     //%vari = getelementptr i32, i32* %frame_ptr, i32 offset
     string src_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
     auto var_value = getFreshRegister();
@@ -229,9 +233,7 @@ void llvmGen::genStore(const string& type, const string& src_val, const string& 
 }
 
 
-// int x = 5b;
-//TODO: support diffrenet types
-void llvmGen::genStoreValInVar(const string& varName /*i32*/, const string& src_reg /*i8*/)
+void llvmGen::genStoreValInVar(const string& varName , const string& src_reg, bool initial)
 {
     PLOGI << "Generating store command with: " << varName << ", " << src_reg;
 
@@ -239,9 +241,20 @@ void llvmGen::genStoreValInVar(const string& varName /*i32*/, const string& src_
     int offset = curr_table.getVarOffsetByName(varName);
     type_t var_type = curr_table.getVarTypeByName(varName);
 
+    llvmEmit("");
+    if(initial){
+        llvmEmit("", "Initializing var " + varName + " to 0");
+    }
+    else{
+        llvmEmit("", "Storing value in var " + varName);
+    }
     string dst_ptr = genGetElementPtr("i32" , "%frame_ptr", offset);
-
-    genStore("i32", genCasting(src_reg, var_type, type_t::INT_T), dst_ptr);
+    if (initial){
+        genStore("i32", "0", dst_ptr);
+    }
+    else{
+        genStore("i32", genCasting(src_reg, var_type, type_t::INT_T), dst_ptr);
+    }
 
 }
 
@@ -260,6 +273,7 @@ string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
               args_regs.end(),
               std::experimental::make_ostream_joiner(sperated_args_list,", "));
     
+    llvmEmit("");
     if (ret_type == type_t::VOID_T){
         //%vari = call i32 @test(i32 2)
         llvmEmit("call " + CFanToLlvmTypesMap.at(ret_type) +

@@ -2,7 +2,8 @@
 
 
 byte foo(byte x, byte y){
-    byte z = x + y;
+    byte z;
+    z = x + y;
     byte w = x;
     byte a = w;
     //return x + y;
@@ -16,9 +17,7 @@ void main()
     //int w = (int) z;
     //print("w = ");
     //printi(w);
-    if(1){
-        return;
-    }
+
     byte id = 200b;
     int f;
     f = id;
