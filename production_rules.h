@@ -113,6 +113,7 @@ struct Statements : public Node{
 struct Statement : public Node{
     string m_label = ""; //start label for the statement 
     vector<pair<int,BranchLabelIndex>> m_next_list;
+    bool is_return = false;
     Statement() = default;
     Statement(Statements*); // Statement -> LB Statements RB
     Statement(Type*, Node*); // Statement - >Type ID SC 
@@ -185,4 +186,4 @@ struct Exp : public Node{
 
 
 
-#endif //PRODUCTION_RULES
+#endif //PRODUCTION_RULESS

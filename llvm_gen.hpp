@@ -19,7 +19,7 @@ public:
     const size_t maxNumOfVars = 50;
 
     int llvmEmit(const string& str, const string& comment = "") const;
-    void closeFunc();
+    void closeFunc(Statements* statements);
     
     // Handle identation
     void incIdentation();
@@ -48,6 +48,7 @@ public:
     void genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& true_list_item,
                                            pair<int,BranchLabelIndex>& false_list_item);
     void genUncondBranch(pair<int,BranchLabelIndex>& list_item);
+    string genBoolExpVal(vector<pair<int,BranchLabelIndex>>& true_list, vector<pair<int,BranchLabelIndex>>& false_list);
 
 };
 

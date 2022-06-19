@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum type_t {INT_T, BOOL_T, BYTE_T, STRING_T, VOID_T};
+enum type_t {BYTE_T, BOOL_T, INT_T, STRING_T, VOID_T};
 enum symbol_type_t {VAR, FUNC, ARG};
 
 struct Dict{
@@ -55,7 +55,6 @@ struct SymbolTable{
     vector<SymbolTableEntry> m_entries;
     SymbolTable(){}
     SymbolTable(vector<SymbolTableEntry> entries) : m_entries(entries) {}
-    bool is_return_appeared = false;
     void print() const;
     void addFuncEntry (const string& name, type_t ret_type, vector<type_t>& arg_types);
     void addVarEntry (const string& name, type_t type);

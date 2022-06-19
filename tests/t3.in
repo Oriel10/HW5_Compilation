@@ -1,38 +1,27 @@
 // simple test
 
-int goo(){
-    int x = 2;
-    return x;
+byte foo(byte x, byte y){
+    byte z = x + y;
+    z = x + y;
+    byte w = x;
+    byte a = w;
+    return x + y;
 }
-
-//byte foo(byte x, byte y){
-//    byte z = x + y;
-//    //z = x + y;
-//    //byte w = x;
-//    //byte a = w;
-//    return x + y;
-//}
 
 void main()
 {   
-    // segmentation fault case:
-    //bool z = true;
-    //if(z){
-    //    int x = 3;
-    //}
-    //return;
-    
-    //int h = 0;
-    //byte x=2b;
-
     if (3>2){
         byte x2=3b;
     }
-    bool x = 4>5;
+    bool x = 4<5;
     byte id = 200b;
     int f;
     f = id;
-    printi(f);
+    if(x){
+        printi(1);
+        return;
+    }
+    printi(0);
     return;
 }
 

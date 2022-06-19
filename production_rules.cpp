@@ -244,9 +244,7 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
 
     //llvm generation
     if (exp->m_type == BOOL_T){
-        auto label = CodeBuffer::instance().genLabel();
-        CodeBuffer::instance().bpatch(exp->m_true_list, label);
-        CodeBuffer::instance().bpatch(exp->m_true_list, label);
+        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type) );
     pair<int,BranchLabelIndex> next_list_item;
@@ -268,6 +266,9 @@ Statement::Statement(Node* auto_token, Node* id, Exp* exp)
     tables_stack.back().addVarEntry(id->lexeme, exp->m_type);
 
     //llvm generation
+    if (exp->m_type == BOOL_T){
+        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
+    }
     llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
     pair<int,BranchLabelIndex> next_list_item;
     llvm_inst.genUncondBranch(next_list_item);
@@ -289,6 +290,9 @@ Statement::Statement(Node* id, Exp* exp)
     }
 
     //llvm generation
+    if (exp->m_type == BOOL_T){
+        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
+    }
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, var->m_type) );
     pair<int,BranchLabelIndex> next_list_item;
     llvm_inst.genUncondBranch(next_list_item);
@@ -331,7 +335,14 @@ Statement::Statement(Node* node){
         if(curr_func.m_ret_type != VOID_T){
             ERROR(output::errorMismatch(yylineno));
         }
-        tables_stack.back().is_return_appeared = true;
+        is_return = true;
+
+        //llvm generation
+        llvm_inst.llvmEmit("ret void");
+        //TODO: check if branch after ret is needed
+        // pair<int,BranchLabelIndex> next_list_item;
+        // llvm_inst.genUncondBranch(next_list_item);
+        // m_next_list = CodeBuffer::makelist(next_list_item);  
     }
     else if(node->token_type == "BREAK"){
         if (loop_counter == 0){
@@ -341,13 +352,7 @@ Statement::Statement(Node* node){
         if (loop_counter == 0){
             ERROR(output::errorUnexpectedContinue(yylineno));
         }
-    }
-
-    //llvm generation
-    llvm_inst.llvmEmit("ret void");
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);    
+    }  
 }
 
 //Statement -> RETURN Exp SC
@@ -361,13 +366,19 @@ Statement::Statement(Exp* exp){
     if(!automaticCastValidity(curr_func.m_ret_type, exp->m_type)){
         ERROR(output::errorMismatch(yylineno));
     }
+    
 
     //llvm generation
+    if (exp->m_type == BOOL_T){
+        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
+    }
     string to_emit = "ret " + CFanToLlvmTypesMap[exp->m_type] + " " +exp->m_reg;
     llvm_inst.llvmEmit(to_emit);
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);
+
+    //TODO: check if branch is needed after return;
+    // pair<int,BranchLabelIndex> next_list_item;
+    // llvm_inst.genUncondBranch(next_list_item);
+    // m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // 𝐸𝑥𝑝 → 𝐶𝑎𝑙𝑙
@@ -494,9 +505,17 @@ Exp::Exp(Node* node){
             m_type = id_p->m_type;
             m_reg = llvm_inst.genGetVar(node->lexeme);
             PLOGI << "Register of " << node->lexeme << " is: " << m_reg;
+            if(m_type == BOOL_T){
+                pair<int,BranchLabelIndex> true_list_item, false_list_item;
+                llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
+                m_true_list = CodeBuffer::makelist(true_list_item);
+                m_false_list = CodeBuffer::makelist(false_list_item);
+            }
             return;
-        }    
-        ERROR(output::errorUndef(yylineno, node->lexeme));      
+        }
+        else{   
+            ERROR(output::errorUndef(yylineno, node->lexeme));      
+        }
     }
     else if(node->token_type == "NUM"){
         m_type = INT_T;
@@ -513,14 +532,15 @@ Exp::Exp(Node* node){
         string str_emit = m_reg + " = getelementptr [" + str_len + " x i8], [" + str_len + " x i8]* " + g_str_reg + ", i32 0, i32 0";
         llvm_inst.llvmEmit(str_emit);
     }
-    else if(node->token_type == "TRUE"){
+    else {
+        assert(node->token_type == "TRUE" || node->token_type == "FALSE");
         m_type = BOOL_T;
-        m_reg = llvm_inst.setReg("1", BOOL_T);
-    }
-    else{
-        assert(node->token_type == "FALSE");
-        m_type = BOOL_T;
-        m_reg = llvm_inst.setReg("0", BOOL_T);
+        string boolVal = (node->token_type == "TRUE") ? "1" : "0";
+        m_reg = llvm_inst.setReg(boolVal, BOOL_T);
+        pair<int,BranchLabelIndex> true_list_item, false_list_item;
+        llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
+        m_true_list = CodeBuffer::makelist(true_list_item);
+        m_false_list = CodeBuffer::makelist(false_list_item);
     }
 } 
 
