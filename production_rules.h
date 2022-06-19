@@ -103,8 +103,9 @@ struct NextInstMarker : public Node{
 
 struct Statements : public Node{
     vector<Statement*> m_statement_list;
+    vector<pair<int,BranchLabelIndex>> m_next_list;
     Statements() = default;
-    Statements(/*NextInstMarker* statement_marker, */ Statement*); // Statements -> M Statement
+    Statements(Statement*); // Statements -> Statement
     Statements(Statements*, NextInstMarker*, Statement*); // Statements -> Statements M Statement
     ~Statements() = default;
 };

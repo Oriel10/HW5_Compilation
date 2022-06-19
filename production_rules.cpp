@@ -184,11 +184,12 @@ Call::Call(Node* func_id)
 }
 
 // Statements -> M Statement
-Statements::Statements(/*NextInstMarker* statement_marker, */Statement* statement)
+Statements::Statements(Statement* statement)
 {
     ASSERT_ARG(statement);
     m_statement_list.clear();
     m_statement_list.push_back(statement);
+    m_next_list = statement->m_next_list;
 }
 
 // Statements -> Statements M Statement
@@ -197,6 +198,7 @@ Statements::Statements(Statements* statements, NextInstMarker* statement_marker,
     ASSERT_3ARGS(statements, statement_marker, statement);
     statement->m_label = statement_marker->m_label;
     Statement* last_statement = statements->m_statement_list.back();
+    m_next_list = last_statement->m_next_list;
     CodeBuffer::instance().bpatch(last_statement->m_next_list, statement->m_label);
     m_statement_list.push_back(statement);
 }
@@ -204,8 +206,7 @@ Statements::Statements(Statements* statements, NextInstMarker* statement_marker,
 // Statement -> LBRACE Statements RBRACE
 Statement::Statement(Statements* statements){
     PLOGI<< "Statement -> LB Statements RB";
-    Statement* last_statement = statements->m_statement_list.back();
-    m_next_list = last_statement->m_next_list;
+    m_next_list = statements->m_next_list;
 }
 
 // Statement -> Type ID SC 
@@ -242,6 +243,11 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
 
     //llvm generation
+    if (exp->m_type == BOOL_T){
+        auto label = CodeBuffer::instance().genLabel();
+        CodeBuffer::instance().bpatch(exp->m_true_list, label);
+        CodeBuffer::instance().bpatch(exp->m_true_list, label);
+    }
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type) );
     pair<int,BranchLabelIndex> next_list_item;
     llvm_inst.genUncondBranch(next_list_item);
@@ -417,7 +423,7 @@ Exp::Exp(Exp* bool_exp){
     m_false_list = bool_exp->m_false_list;  
     // PLOGD << "bool_exp->m_true_list.size(): " << bool_exp->m_true_list.size();
     // PLOGD << "bool_exp->m_false_list.size(): " << bool_exp->m_false_list.size();
-    llvm_inst.genCondBranch(bool_exp->m_reg, m_true_list[0], m_false_list[0]);
+    // llvm_inst.genCondBranch(bool_exp->m_reg, m_true_list[0], m_false_list[0]);
     
 }
 
@@ -448,7 +454,9 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         //llvm generation
         m_reg = llvm_inst.genCompare(exp1->m_reg, node->lexeme, exp2->m_reg, exp1->m_type);
         pair<int,BranchLabelIndex> true_list_item, false_list_item;
-        // llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
+        //cond branch should be here, for boolean expressions without IF as well in order to 
+        //support compound boolean expressions with AND and OR.
+        llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
         m_true_list = CodeBuffer::makelist(true_list_item);
         m_false_list = CodeBuffer::makelist(false_list_item);
 

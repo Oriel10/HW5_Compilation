@@ -28,12 +28,12 @@ void main()
     if (3>2){
         byte x2=3b;
     }
-    bool x = 3>2;
-    //byte id = 200b;
-    //int f;
-    //f = id;
-    //printi(f);
-    //return;
+    bool x = 4>5;
+    byte id = 200b;
+    int f;
+    f = id;
+    printi(f);
+    return;
 }
 
 
