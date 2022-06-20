@@ -185,7 +185,7 @@ void llvmGen::zeroIdentation(){
 
 void llvmGen::closeFunc(Statements* statements){
     auto last_statement = statements->m_statement_list.back();
-    if(!last_statement->is_return){
+    if(!last_statement->m_is_return){
         m_cb->bpatch(last_statement->m_next_list, m_cb->genLabel());
         SymbolTableEntry& curr_func = tables_stack[0].m_entries.back();
         if (curr_func.m_ret_type == type_t::VOID_T){
@@ -314,21 +314,6 @@ string llvmGen::genCasting(const string& reg, type_t src_type, type_t dst_type)
         // %vari = trunc i32 %varj to i8"
         llvmEmit(casted_reg + " = " + cast_type + CFanToLlvmTypesMap[src_type] + " " + reg + " "
                                          + " to " + CFanToLlvmTypesMap[dst_type]);
-        // TODO: remove
-        // if(src_type == type_t::INT_T && dst_type == type_t::BYTE_T){
-        //     llvmEmit(casted_reg + " = trunc i32 " + reg + " to i8");
-        // }
-        // else if(dst_type == type_t::INT_T && src_type == type_t::BYTE_T){
-        //     llvmEmit(casted_reg + " = zext i8 " + reg + " to i32");
-        // }
-        // else if(dst_type == type_t::BOOL_T && src_type == type_t::INT_T){
-
-        // }
-        // else{
-        //     PLOGF << "Casting is available only with int and byte types."<<"(src_t: " << types_dict[src_type]<<", dst_t: " << types_dict[dst_type]<<")";
-        //     return "%failedCasting";  //Souldn't be used 
-        // }
-
         return casted_reg;
 }
 
@@ -359,7 +344,7 @@ void llvmGen::genUncondBranch(pair<int,BranchLabelIndex>& list_item)
     return;   
 }
 
-string llvmGen::genBoolExpVal(vector<pair<int,BranchLabelIndex>>& true_list, vector<pair<int,BranchLabelIndex>>& false_list)
+string llvmGen::genBoolExpVal(const vector<pair<int,BranchLabelIndex>>& true_list, const vector<pair<int,BranchLabelIndex>>& false_list)
 {
 
     auto true_label = m_cb->genLabel();
@@ -374,16 +359,4 @@ string llvmGen::genBoolExpVal(vector<pair<int,BranchLabelIndex>>& true_list, vec
     auto bool_val_reg = getFreshRegister();
     llvmEmit(bool_val_reg + " = phi i1 [true, %" + true_label + "], [false, %" + false_label + "]");
     return bool_val_reg;
-
-    //TODO: check if it could be translated to phi command
-    // auto false_label = CodeBuffer::instance().genLabel();
-    // CodeBuffer::instance().bpatch(false_list, false_label);
-    // auto false_reg = setReg("0", BOOL_T);
-    // std::pair<int, BranchLabelIndex> item;
-    // genUncondBranch(item);       
-    // CodeBuffer::instance().bpatch(CodeBuffer::merge(CodeBuffer::makelist(item),exp->m_true_list)
-    //                                                          ,CodeBuffer::instance().genLabel());
-    // // %2 = phi i1 [ true, %entry ], [ %tobool2, %lor.rhs ]
-    // exp->m_reg = llvmEmit(llvm_inst.getFreshRegister() 
-    //           + " = phi i1 [true, %entry], [" + false_reg + ", %" + false_label + "]");
 }

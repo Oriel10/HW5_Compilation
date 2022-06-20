@@ -48,7 +48,14 @@ public:
     void genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& true_list_item,
                                            pair<int,BranchLabelIndex>& false_list_item);
     void genUncondBranch(pair<int,BranchLabelIndex>& list_item);
-    string genBoolExpVal(vector<pair<int,BranchLabelIndex>>& true_list, vector<pair<int,BranchLabelIndex>>& false_list);
+    
+    /** genBoolExpVal
+     * Based on trueList and falseList of boolean expression, the function
+     * generates false label and true label and then, using phi llvm instruction,
+     * generates new reg with the boolean vales and return it;
+     *  
+    */
+    string genBoolExpVal(const vector<pair<int,BranchLabelIndex>>& true_list, const vector<pair<int,BranchLabelIndex>>& false_list);
 
 };
 

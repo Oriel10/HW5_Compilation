@@ -30,10 +30,12 @@ void startCompiler()
 
 void endCompiler()
 {
+    #ifndef SEMANTIC
     PLOGI << "Print global buffer";
     CodeBuffer::instance().printGlobalBuffer();
     PLOGI << "Print code buffer";
     CodeBuffer::instance().printCodeBuffer();
+    #endif
     closeScope();
     PLOGI << "End compiler";
 }
@@ -131,9 +133,6 @@ Call::Call(Node* func_id, ExpList* exp_list)
     //Semantic analysis
     lineno = exp_list->lineno;
     const SymbolTableEntry* id_p = findIdentifier(func_id->lexeme);
-    if(id_p->m_symbol_type != symbol_type_t::FUNC){
-        ERROR(output::errorUndefFunc(yylineno, id_p->m_name));
-    }
     //id doesnt exist or it's not a function
     if(!id_p || id_p->m_symbol_type != FUNC){
         ERROR(output::errorUndefFunc(yylineno, func_id->lexeme));
@@ -183,24 +182,37 @@ Call::Call(Node* func_id)
     m_ret_reg = llvm_inst.genCallFunc(func_id->lexeme);
 }
 
-// Statements -> M Statement
+// Statements -> Statement
 Statements::Statements(Statement* statement)
 {
     ASSERT_ARG(statement);
     m_statement_list.clear();
     m_statement_list.push_back(statement);
+    if(!statement->m_is_return){
+        pair<int,BranchLabelIndex> next_list_item;
+        llvm_inst.genUncondBranch(next_list_item);
+        statement->m_next_list = CodeBuffer::merge(statement->m_next_list, CodeBuffer::makelist(next_list_item));
+    }
     m_next_list = statement->m_next_list;
 }
 
-// Statements -> Statements M Statement
-Statements::Statements(Statements* statements, NextInstMarker* statement_marker, Statement* statement)
+// Statements -> Statements NextInstMarker Statement
+Statements::Statements(Statements* statements, NextInstMarker* nextinst_marker, Statement* statement)
 {
-    ASSERT_3ARGS(statements, statement_marker, statement);
-    statement->m_label = statement_marker->m_label;
-    Statement* last_statement = statements->m_statement_list.back();
-    m_next_list = last_statement->m_next_list;
-    CodeBuffer::instance().bpatch(last_statement->m_next_list, statement->m_label);
+    ASSERT_3ARGS(statements, nextinst_marker, statement);
+    statement->m_label = nextinst_marker->m_label;
     m_statement_list.push_back(statement);
+
+    //Backpatching nextlist of statements with NextInstMarker's new label before the next statement.
+    CodeBuffer::instance().bpatch(statements->m_next_list, nextinst_marker->m_label);
+
+    if(!statement->m_is_return){
+        pair<int,BranchLabelIndex> next_list_item;
+        llvm_inst.genUncondBranch(next_list_item);
+        m_next_list = CodeBuffer::makelist(next_list_item);
+    }
+    
+    m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
 }
 
 // Statement -> LBRACE Statements RBRACE
@@ -222,9 +234,6 @@ Statement::Statement(Type* type, Node* id)
 
     //llvm generation
     llvm_inst.genStoreValInVar(id->lexeme, "", /*initial*/ true);
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> Type ID ASSIGN Exp SC 
@@ -244,12 +253,10 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
 
     //llvm generation
     if (exp->m_type == BOOL_T){
+        llvm_inst.llvmEmit("", "Computing boolean value of " + id->lexeme);
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type) );
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> AUTO ID ASSIGN Exp SC
@@ -270,9 +277,6 @@ Statement::Statement(Node* auto_token, Node* id, Exp* exp)
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
     llvm_inst.genStoreValInVar(id->lexeme, exp->m_reg);
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // Statement -> ID ASSIGN Exp SC
@@ -294,37 +298,40 @@ Statement::Statement(Node* id, Exp* exp)
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
     llvm_inst.genStoreValInVar(id->lexeme, llvm_inst.genCasting(exp->m_reg, exp->m_type, var->m_type) );
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);
+
 }
 
 // Statement -> Call SC
 Statement::Statement(Call* call)
 {
     ASSERT_ARG(call);
-
-    pair<int,BranchLabelIndex> next_list_item;
-    llvm_inst.genUncondBranch(next_list_item);
-    m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
-//Statement -> IF LPAREN Exp RPAREN Statement
-//Statement -> WHILE LPAREN Exp RPAREN Statement
-Statement::Statement(Node* node, Exp* exp, IfMarker* if_marker, Statement* statement){
+//Statement -> IF LPAREN Exp RPAREN IfWhileMarker Statement
+//Statement -> WHILE LPAREN Exp RPAREN IfWhileMarker Statement
+Statement::Statement(Node* node, Exp* bool_exp, IfWhileMarker* if_while_marker, Statement* statement){
     //statement arg is just to make this c'tor unique
-    ASSERT_4ARGS(node, exp, if_marker, statement);
+    ASSERT_4ARGS(node, bool_exp, if_while_marker, statement);
     // llvm generation
-    PLOGD << "next list of statement size is : " << statement->m_next_list.size();
-    CodeBuffer::instance().bpatch(exp->m_true_list, if_marker->m_label);
-    m_next_list = CodeBuffer::merge(m_next_list, exp->m_false_list);
-    m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
-}
+    CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
+    if(node->lexeme == "if"){
+        m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
+        m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
+    }
+    else{
+        assert (node->lexeme == "while");
+        CodeBuffer::instance().bpatch(statement->m_next_list, if_while_marker->m_label);
+    }
+    }
 
-// Statement -> IF LP Exp RP Statement Else Statement
-Statement::Statement(Node* node_if, Exp* exp, Node* node_else){
-    ASSERT_3ARGS(node_if, exp, node_else);
-    // do nothing
+// Statement -> Statement -> IF LP Exp RP IfWhileMarker Statement Else ElseMarker Statement
+Statement::Statement(Exp* boo_exp, IfWhileMarker* if_marker, Statement* if_statement, ElseMarker* else_marker, Statement* else_statement){
+    ASSERT_5ARGS(boo_exp, if_marker, if_statement, else_marker, else_statement);
+    // llvm generation
+    CodeBuffer::instance().bpatch(boo_exp->m_true_list, if_marker->m_label);
+    CodeBuffer::instance().bpatch(boo_exp->m_false_list, else_marker->m_label);
+    m_next_list = CodeBuffer::merge(m_next_list, if_statement->m_next_list);
+    m_next_list = CodeBuffer::merge(m_next_list, else_statement->m_next_list);
 }
 
 //Statement -> RETURN SC | BREAK SC | CONTINUE SC
@@ -335,14 +342,10 @@ Statement::Statement(Node* node){
         if(curr_func.m_ret_type != VOID_T){
             ERROR(output::errorMismatch(yylineno));
         }
-        is_return = true;
+        m_is_return = true;
 
         //llvm generation
         llvm_inst.llvmEmit("ret void");
-        //TODO: check if branch after ret is needed
-        // pair<int,BranchLabelIndex> next_list_item;
-        // llvm_inst.genUncondBranch(next_list_item);
-        // m_next_list = CodeBuffer::makelist(next_list_item);  
     }
     else if(node->token_type == "BREAK"){
         if (loop_counter == 0){
@@ -372,13 +375,9 @@ Statement::Statement(Exp* exp){
     if (exp->m_type == BOOL_T){
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
+    m_is_return = true;
     string to_emit = "ret " + CFanToLlvmTypesMap[exp->m_type] + " " +exp->m_reg;
     llvm_inst.llvmEmit(to_emit);
-
-    //TODO: check if branch is needed after return;
-    // pair<int,BranchLabelIndex> next_list_item;
-    // llvm_inst.genUncondBranch(next_list_item);
-    // m_next_list = CodeBuffer::makelist(next_list_item);
 }
 
 // 𝐸𝑥𝑝 → 𝐶𝑎𝑙𝑙
@@ -581,4 +580,6 @@ Exp::Exp(Node* NOT, Exp* exp){
 
 NextInstMarker::NextInstMarker(string label) : m_label(label){}
 
-IfMarker::IfMarker(string label) : m_label(label){}
+IfWhileMarker::IfWhileMarker(string label) : m_label(label){}
+
+ElseMarker::ElseMarker(string label) : m_label(label){}

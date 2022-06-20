@@ -10,18 +10,34 @@ byte foo(byte x, byte y){
 
 void main()
 {   
-    if (3>2){
-        byte x2=3b;
+    int x;
+    int w = 4;
+    if (2 > 3){
+        x = 2b;
+        w = 1;
+        return;
     }
-    bool x = 4<5;
+    else{
+        x = 3b;
+    }
+    printi(x);
+    printi(w);
+
+    int i = 0;
+    //while (i<10){
+    //    i = i+1;
+    //}
+    printi(i);
+    bool z = 4<5;
     byte id = 200b;
     int f;
     f = id;
-    if(x){
+    if(z){
         printi(1);
-        return;
     }
-    printi(0);
+    else{
+        printi(0);
+    }
     return;
 }
 

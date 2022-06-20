@@ -94,6 +94,7 @@ pair<type_t, vector<type_t>> SymbolTable::getFuncRetTypeAndArgsTypesByName(const
 
 void openScope()
 {   
+    PLOGI << "Open scope in line: " << yylineno;
     //Semantic analysis
     //start of the program
     if(tables_stack.empty()){ 
@@ -117,6 +118,7 @@ void openScope()
 
 void closeScope()
 {   
+    PLOGI << "Close scope in line: " << yylineno;
     //global scope is closed and main is missing
     const SymbolTableEntry* main_entry = findIdentifier("main");
     
@@ -133,9 +135,10 @@ void closeScope()
     assert(offsets_stack.size());
     const auto& table = tables_stack.back();
     
-    // TODO: Here for symbol table printout
-    // output::endScope();
-    // table.print();
+    #ifdef SEMANTIC
+    output::endScope();
+    table.print();
+    #endif
 
     tables_stack.pop_back();
     offsets_stack.pop_back();

@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+// #define SEMANTIC 1 //TODO: if defined, output will be printed for semantic tests
+
 using namespace std;
 
 enum type_t {BYTE_T, BOOL_T, INT_T, STRING_T, VOID_T};

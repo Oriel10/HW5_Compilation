@@ -119,7 +119,7 @@ NextInstMarker:
 ;
 
 Statement :
-        LBRACE M Statements RBRACE             {PLOGD << prodRule(14);
+        LBRACE {openScope();} Statements RBRACE{PLOGD << prodRule(14);
                                                 $$ = new Statement(dynamic_cast<Statements*>($3));
                                                 closeScope();                   }
     |   Type ID SC                             {PLOGD << prodRule(15);
@@ -136,18 +136,18 @@ Statement :
                                                 $$ = new Statement($1);         }
     |   RETURN Exp SC                          {PLOGD << prodRule(21);
                                                 $$ = new Statement(dynamic_cast<Exp*>($2));}
-    |   IF LPAREN BOOL_EXP RPAREN IfMarker 
+    |   IF LPAREN BOOL_EXP RPAREN IfWhileMarker 
         Statement %prec IF                     {PLOGD << prodRule(22);
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<IfMarker*>($5), dynamic_cast<Statement*>($6));
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6));
                                                 closeScope();                   }
-    |   IF LPAREN BOOL_EXP RPAREN IfMarker 
-        Statement ELSE M2 Statement            {PLOGD << prodRule(23);
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), $7);
+    |   IF LPAREN BOOL_EXP RPAREN IfWhileMarker 
+        Statement ELSE ElseMarker Statement    {PLOGD << prodRule(23);
+                                                $$ = new Statement(dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6), dynamic_cast<ElseMarker*>($8), dynamic_cast<Statement*>($9));
                                                 closeScope();}
     |   WHILE LPAREN BOOL_EXP RPAREN 
-        {openScope(); loop_counter++;}
+        IfWhileMarker {loop_counter++;}
         Statement                              {PLOGD << prodRule(24);
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<Statement*>($6));
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($7));
                                                 closeScope(); loop_counter--;   }
     |   BREAK SC                               {PLOGD << prodRule(25);
                                                 $$ = new Statement($1);         }
@@ -155,20 +155,17 @@ Statement :
                                                 $$ = new Statement($1);         }                                 
 ;
 
-M :
-        /*epsilon*/                            {PLOGD << prodRule(48); 
-                                                openScope();                   }
-;
 
-IfMarker :
+IfWhileMarker :
         /*epsilon*/                            {PLOGD << prodRule(48);
-                                                $$ = new IfMarker(CodeBuffer::instance().genLabel()); 
+                                                $$ = new IfWhileMarker(CodeBuffer::instance().genLabel()); 
                                                 openScope();                   }
 ;
 
 
-M2 :
-        /*epsilon*/                            {PLOGD << prodRule(49); 
+ElseMarker :
+        /*epsilon*/                            {PLOGD << prodRule(49);
+                                                $$ = new ElseMarker(CodeBuffer::instance().genLabel()); 
                                                 closeScope();                   
                                                 openScope();                     }
 ;
