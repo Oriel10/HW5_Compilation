@@ -11,10 +11,12 @@ int testWhile(int i){
     int j;
     while(j < 10){
         printi(i);
-        continue;
+        //break;
+        while(2>1){
+            break;
+            int idk = 2000;
+        }
         j = j + 1;
-        while(2>1)
-            continue;
     }
 }
 

@@ -199,6 +199,7 @@ Statements::Statements(Statement* statement)
         statement->m_next_list = CodeBuffer::merge(statement->m_next_list, CodeBuffer::makelist(next_list_item));
     }
     m_next_list = statement->m_next_list;
+    m_break_list = statement->m_break_list;
     m_continue_list = statement->m_continue_list;
 }
 
@@ -225,6 +226,7 @@ Statements::Statements(Statements* statements, NextInstMarker* nextinst_marker, 
         m_next_list = CodeBuffer::makelist(next_list_item);
     }
     m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
+    m_break_list = CodeBuffer::merge(statements->m_break_list, statement->m_break_list);
     m_continue_list = CodeBuffer::merge(statements->m_continue_list, statement->m_continue_list);
 }
 
@@ -234,6 +236,7 @@ Statement::Statement(Statements* statements){
     m_statement_type = BLOCK_STATEMENT;
     PLOGI<< "Statement -> LB Statements RB";
     m_next_list = statements->m_next_list;
+    m_break_list = statements->m_break_list;
     m_continue_list = statements->m_continue_list;
 }
 
@@ -337,8 +340,9 @@ Statement::Statement(Exp* bool_exp, IfWhileMarker* if_while_marker, Statement* s
     CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
     m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
     m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
+    // m_next_list = CodeBuffer::merge(m_next_list, statement->m_break_list);
+    m_break_list = statement->m_break_list;
     m_continue_list = statement->m_continue_list;
-    
 }
 
 // Statement -> WHILE LP WhileMarker Exp RP IfWhileMarker Statement 
@@ -346,14 +350,17 @@ Statement::Statement(WhileMarker* while_marker, Exp* bool_exp, IfWhileMarker* if
     ASSERT_4ARGS(while_marker, bool_exp, if_while_marker, statement);
     // llvm generation
     m_statement_type = WHILE_STATEMENT;
-    // m_continue_list = statement->m_continue_list;
     CodeBuffer::instance().bpatch(statement->m_continue_list, while_marker->m_label);
     CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
     CodeBuffer::instance().bpatch(statement->m_next_list, while_marker->m_label);
     m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
+    m_next_list = CodeBuffer::merge(m_next_list, statement->m_break_list);
+    m_break_list.clear();
+    m_continue_list.clear();
+
 }
 
-// Statement -> Statement -> IF LP Exp RP IfWhileMarker Statement Else ElseMarker Statement
+// Statement -> IF LP Exp RP IfWhileMarker Statement Else ElseMarker Statement
 Statement::Statement(Exp* boo_exp, IfWhileMarker* if_marker, Statement* if_statement, ElseMarker* else_marker, Statement* else_statement){
     ASSERT_5ARGS(boo_exp, if_marker, if_statement, else_marker, else_statement);
     // llvm generation
@@ -362,6 +369,8 @@ Statement::Statement(Exp* boo_exp, IfWhileMarker* if_marker, Statement* if_state
     CodeBuffer::instance().bpatch(boo_exp->m_false_list, else_marker->m_label);
     m_next_list = CodeBuffer::merge(m_next_list, if_statement->m_next_list);
     m_next_list = CodeBuffer::merge(m_next_list, else_statement->m_next_list);
+    m_break_list = CodeBuffer::merge(if_statement->m_break_list, else_statement->m_break_list);
+    m_continue_list = CodeBuffer::merge(if_statement->m_continue_list, else_statement->m_continue_list);
 }
 
 //Statement -> RETURN SC | BREAK SC | CONTINUE SC
@@ -383,6 +392,13 @@ Statement::Statement(Node* node){
         if (loop_counter == 0){
             ERROR(output::errorUnexpectedBreak(yylineno));
         }
+
+        // llvm generation
+        llvm_inst.llvmEmit("", "Jumping to statement after while(found break)");
+        pair<int, BranchLabelIndex> break_list_item;
+        llvm_inst.genUncondBranch(break_list_item);
+        m_break_list = CodeBuffer::makelist(break_list_item);
+
     }else{
         assert (node->token_type == "CONTINUE");
         m_statement_type = CONTINUE_STATEMENT;
@@ -392,7 +408,7 @@ Statement::Statement(Node* node){
 
         //TODO: figure 
         // llvm generation
-        llvm_inst.llvmEmit("", "Jumping to while condition");
+        llvm_inst.llvmEmit("", "Jumping to while condition(found continue)");
         pair<int, BranchLabelIndex> cont_list_item;
         llvm_inst.genUncondBranch(cont_list_item);
         m_continue_list = CodeBuffer::makelist(cont_list_item);
