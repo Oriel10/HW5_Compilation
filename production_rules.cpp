@@ -188,12 +188,18 @@ Statements::Statements(Statement* statement)
     ASSERT_ARG(statement);
     m_statement_list.clear();
     m_statement_list.push_back(statement);
-    if(!statement->m_is_return){
+    if(!(statement->m_statement_type == BLOCK_STATEMENT ||
+         statement->m_statement_type == RETURN_STATEMENT ||
+         statement->m_statement_type == IF_STATEMENT ||
+         statement->m_statement_type == WHILE_STATEMENT ||
+         statement->m_statement_type == BREAK_STATEMENT ||
+         statement->m_statement_type == CONTINUE_STATEMENT)){
         pair<int,BranchLabelIndex> next_list_item;
         llvm_inst.genUncondBranch(next_list_item);
         statement->m_next_list = CodeBuffer::merge(statement->m_next_list, CodeBuffer::makelist(next_list_item));
     }
     m_next_list = statement->m_next_list;
+    m_continue_list = statement->m_continue_list;
 }
 
 // Statements -> Statements NextInstMarker Statement
@@ -206,19 +212,29 @@ Statements::Statements(Statements* statements, NextInstMarker* nextinst_marker, 
     //Backpatching nextlist of statements with NextInstMarker's new label before the next statement.
     CodeBuffer::instance().bpatch(statements->m_next_list, nextinst_marker->m_label);
 
-    if(!statement->m_is_return){
+    //If new statement isn't return, add branch command to the next statement and save the branch
+    //location into the nextList of statements.
+    if(!(statement->m_statement_type == BLOCK_STATEMENT ||
+         statement->m_statement_type == RETURN_STATEMENT ||
+         statement->m_statement_type == IF_STATEMENT ||
+         statement->m_statement_type == WHILE_STATEMENT ||
+         statement->m_statement_type == BREAK_STATEMENT ||
+         statement->m_statement_type == CONTINUE_STATEMENT)){
         pair<int,BranchLabelIndex> next_list_item;
         llvm_inst.genUncondBranch(next_list_item);
         m_next_list = CodeBuffer::makelist(next_list_item);
     }
-    
     m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
+    m_continue_list = CodeBuffer::merge(statements->m_continue_list, statement->m_continue_list);
 }
 
 // Statement -> LBRACE Statements RBRACE
 Statement::Statement(Statements* statements){
+    //llvm generation
+    m_statement_type = BLOCK_STATEMENT;
     PLOGI<< "Statement -> LB Statements RB";
     m_next_list = statements->m_next_list;
+    m_continue_list = statements->m_continue_list;
 }
 
 // Statement -> Type ID SC 
@@ -233,9 +249,10 @@ Statement::Statement(Type* type, Node* id)
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
 
     //llvm generation
+    m_statement_type = DECALARATION_STATEMENT;
     llvm_inst.genStoreValInVar(id->lexeme, "", /*initial*/ true);
 }
-//bool x = e1 or e2
+
 // Statement -> Type ID ASSIGN Exp SC 
 Statement::Statement(Type* type, Node* id, Exp* exp)
 {
@@ -251,7 +268,8 @@ Statement::Statement(Type* type, Node* id, Exp* exp)
     assert(tables_stack.size());
     tables_stack.back().addVarEntry(id->lexeme, type->m_type);
 
-    //llvm generation
+    //llvm generation    
+    m_statement_type = ASSIGNMENT_STATEMENT;
     if (exp->m_type == BOOL_T){
         llvm_inst.llvmEmit("", "Computing boolean value of " + id->lexeme);
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
@@ -273,6 +291,7 @@ Statement::Statement(Node* auto_token, Node* id, Exp* exp)
     tables_stack.back().addVarEntry(id->lexeme, exp->m_type);
 
     //llvm generation
+    m_statement_type = ASSIGNMENT_STATEMENT;
     if (exp->m_type == BOOL_T){
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
@@ -294,6 +313,7 @@ Statement::Statement(Node* id, Exp* exp)
     }
 
     //llvm generation
+    m_statement_type = ASSIGNMENT_STATEMENT;
     if (exp->m_type == BOOL_T){
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
@@ -303,31 +323,41 @@ Statement::Statement(Node* id, Exp* exp)
 
 // Statement -> Call SC
 Statement::Statement(Call* call)
-{
+{   
     ASSERT_ARG(call);
+    // llvm generation
+    m_statement_type = CALL_STATEMENT;
 }
 
 //Statement -> IF LPAREN Exp RPAREN IfWhileMarker Statement
-//Statement -> WHILE LPAREN Exp RPAREN IfWhileMarker Statement
-Statement::Statement(Node* node, Exp* bool_exp, IfWhileMarker* if_while_marker, Statement* statement){
-    //statement arg is just to make this c'tor unique
-    ASSERT_4ARGS(node, bool_exp, if_while_marker, statement);
+Statement::Statement(Exp* bool_exp, IfWhileMarker* if_while_marker, Statement* statement){
+    ASSERT_3ARGS(bool_exp, if_while_marker, statement);
     // llvm generation
+    m_statement_type = IF_STATEMENT;
     CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
-    if(node->lexeme == "if"){
-        m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
-        m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
-    }
-    else{
-        assert (node->lexeme == "while");
-        CodeBuffer::instance().bpatch(statement->m_next_list, if_while_marker->m_label);
-    }
-    }
+    m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
+    m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
+    m_continue_list = statement->m_continue_list;
+    
+}
+
+// Statement -> WHILE LP WhileMarker Exp RP IfWhileMarker Statement 
+Statement::Statement(WhileMarker* while_marker, Exp* bool_exp, IfWhileMarker* if_while_marker, Statement* statement){
+    ASSERT_4ARGS(while_marker, bool_exp, if_while_marker, statement);
+    // llvm generation
+    m_statement_type = WHILE_STATEMENT;
+    // m_continue_list = statement->m_continue_list;
+    CodeBuffer::instance().bpatch(statement->m_continue_list, while_marker->m_label);
+    CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
+    CodeBuffer::instance().bpatch(statement->m_next_list, while_marker->m_label);
+    m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
+}
 
 // Statement -> Statement -> IF LP Exp RP IfWhileMarker Statement Else ElseMarker Statement
 Statement::Statement(Exp* boo_exp, IfWhileMarker* if_marker, Statement* if_statement, ElseMarker* else_marker, Statement* else_statement){
     ASSERT_5ARGS(boo_exp, if_marker, if_statement, else_marker, else_statement);
     // llvm generation
+    m_statement_type = IFELSE_STATEMENT;
     CodeBuffer::instance().bpatch(boo_exp->m_true_list, if_marker->m_label);
     CodeBuffer::instance().bpatch(boo_exp->m_false_list, else_marker->m_label);
     m_next_list = CodeBuffer::merge(m_next_list, if_statement->m_next_list);
@@ -338,6 +368,7 @@ Statement::Statement(Exp* boo_exp, IfWhileMarker* if_marker, Statement* if_state
 Statement::Statement(Node* node){
     ASSERT_ARG(node);
     if(node->token_type == "RETURN"){
+        m_statement_type = RETURN_STATEMENT;
         SymbolTableEntry curr_func = tables_stack[0].m_entries.back();
         if(curr_func.m_ret_type != VOID_T){
             ERROR(output::errorMismatch(yylineno));
@@ -348,19 +379,30 @@ Statement::Statement(Node* node){
         llvm_inst.llvmEmit("ret void");
     }
     else if(node->token_type == "BREAK"){
+        m_statement_type = BREAK_STATEMENT;
         if (loop_counter == 0){
             ERROR(output::errorUnexpectedBreak(yylineno));
         }
     }else{
+        assert (node->token_type == "CONTINUE");
+        m_statement_type = CONTINUE_STATEMENT;
         if (loop_counter == 0){
             ERROR(output::errorUnexpectedContinue(yylineno));
         }
+
+        //TODO: figure 
+        // llvm generation
+        llvm_inst.llvmEmit("", "Jumping to while condition");
+        pair<int, BranchLabelIndex> cont_list_item;
+        llvm_inst.genUncondBranch(cont_list_item);
+        m_continue_list = CodeBuffer::makelist(cont_list_item);
     }  
 }
 
 //Statement -> RETURN Exp SC
 Statement::Statement(Exp* exp){
     ASSERT_ARG(exp);
+    m_statement_type = RETURN_STATEMENT;
     SymbolTableEntry curr_func = tables_stack[0].m_entries.back();
     const SymbolTableEntry* exp_p = findIdentifier(exp->lexeme); 
     if(exp_p && exp_p->m_symbol_type == FUNC){
@@ -403,6 +445,11 @@ ExpList::ExpList(Exp* exp)
     ASSERT_ARG(exp);
     lineno = exp->lineno;
     m_exp_list_types.push_back(exp->m_type);
+
+    //llvm generation
+    if(exp->m_type == BOOL_T){
+        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
+    }
     m_exp_list_regs.push_back(exp->m_reg);
 }
 
@@ -415,6 +462,10 @@ ExpList::ExpList(Exp* exp, ExpList* exp_list)
     auto& tmp_vec1 = exp_list->m_exp_list_types;
     m_exp_list_types.insert( m_exp_list_types.end(), tmp_vec1.begin(), tmp_vec1.end());
 
+    //llvm generation
+    if(exp->m_type == BOOL_T){
+        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
+    }
     m_exp_list_regs.push_back(exp->m_reg);
     auto& tmp_vec2 = exp_list->m_exp_list_regs;
     m_exp_list_regs.insert( m_exp_list_regs.end(), tmp_vec2.begin(), tmp_vec2.end());
@@ -615,8 +666,9 @@ Exp::Exp(Node* NOT, Exp* exp){
     m_false_list = exp->m_true_list;
 }
 
-NextInstMarker::NextInstMarker(string label) : m_label(label){}
-
-IfWhileMarker::IfWhileMarker(string label) : m_label(label){}
-
-ElseMarker::ElseMarker(string label) : m_label(label){}
+WhileMarker::WhileMarker() : Marker(){
+    pair<int, BranchLabelIndex> list_item; 
+    llvm_inst.genUncondBranch(list_item, "Dummy branch to support while");
+    m_label = CodeBuffer::instance().genLabel();
+    CodeBuffer::instance().bpatch(CodeBuffer::makelist(list_item), m_label);
+}

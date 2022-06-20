@@ -47,7 +47,7 @@ public:
     string genCompare(const string& reg1, const string& rel_op, const string& reg2, type_t op_type);
     void genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& true_list_item,
                                            pair<int,BranchLabelIndex>& false_list_item);
-    void genUncondBranch(pair<int,BranchLabelIndex>& list_item);
+    void genUncondBranch(pair<int,BranchLabelIndex>& list_item,  string comment = "");
     
     /** genBoolExpVal
      * Based on trueList and falseList of boolean expression, the function

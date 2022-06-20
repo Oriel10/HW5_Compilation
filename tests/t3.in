@@ -1,47 +1,36 @@
 // simple test
 
-//byte foo(byte x, byte y){
-    //byte z = x + y;
-    //z = x + y;
-    //byte w = x;
-    //byte a = w;
-    //return x + y;
-//}
-
 bool testOr(bool i, bool j, bool s){
-    if(i){
+    if(i or j or s){
         printi(10);
     }
     return true;
 }
 
-void main()
-{   
-    bool i = false or testOr(true, false, true);
-    //bool j = not (bool)i;
-    //if(j){
-    //    printi(1000);
-    //}
-
-    //bool x = false or testOr();
-    //if(x){
-    //    printi(100);
-    //}
-    //else{
-    //    printi(200);
-    //}
-    //if (4<5){
-    //    byte x2=3b;
-    //}
-    //byte id = 200b;
-    //int f;
-    //f = id;
-    //if(x){
-    //    printi(1);
-    //    return;
-    //}
-    //printi(0);
-    return;
+int testWhile(int i){
+    int j;
+    while(j < 10){
+        printi(i);
+        continue;
+        j = j + 1;
+        while(2>1)
+            continue;
+    }
 }
 
+void main()
+{   
+    //int z = 1;
+    //int x = 2;
+    //{
+    //    //int y = 3;
+    //    //{
+    //    //    //z = 2;
+    //    //}
+    //}
+    //printi(z);
+    testOr(true, false, true);
+    //bool i = false or testOr(true, false, true);
 
+    return;
+}

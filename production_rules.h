@@ -25,6 +25,8 @@ void endCompiler();
 
 /*================ production rules ===================*/
 
+enum statement_type_t {BLOCK_STATEMENT, DECALARATION_STATEMENT, ASSIGNMENT_STATEMENT, CALL_STATEMENT, RETURN_STATEMENT, IF_STATEMENT, IFELSE_STATEMENT, WHILE_STATEMENT, BREAK_STATEMENT, CONTINUE_STATEMENT };
+
 struct Program;
 struct Funcs;
 struct FuncDecl;
@@ -37,6 +39,7 @@ struct Statement;
 struct NextInstMarker;
 struct IfWhileMarker;
 struct ElseMarker;
+struct WhileMarker;
 struct Call;
 struct ExpList;
 struct Type;
@@ -50,6 +53,13 @@ struct Node{
     Node(string lexeme, string token_type, int lineno) : lexeme(lexeme), token_type(token_type), lineno(lineno){}
     virtual ~Node() {};
 };
+
+struct Marker : public Node{
+    string m_label;
+    Marker() = default;
+    Marker(string label) : m_label(label){}
+};
+
 
 struct Program : public Node{
     Program(Funcs*); //Program -> Funcs
@@ -98,24 +108,32 @@ struct FormalDecl : public Node{
     int lineno;
 };
 
-struct NextInstMarker : public Node{
-    string m_label = "";
-    NextInstMarker(string);
+struct NextInstMarker : public Marker{
+    NextInstMarker(string label) : Marker(label){}
 };
 
 struct Statements : public Node{
     vector<Statement*> m_statement_list;
     vector<pair<int,BranchLabelIndex>> m_next_list;
+    vector<pair<int,BranchLabelIndex>> m_continue_list;
+    vector<pair<int,BranchLabelIndex>> m_break_list;
+
     Statements() = default;
     Statements(Statement*); // Statements -> Statement
     Statements(Statements*, NextInstMarker*, Statement*); // Statements -> Statements M Statement
     ~Statements() = default;
 };
 
+
+
 struct Statement : public Node{
     string m_label = ""; //start label for the statement 
     vector<pair<int,BranchLabelIndex>> m_next_list;
+    vector<pair<int,BranchLabelIndex>> m_continue_list;
+    vector<pair<int,BranchLabelIndex>> m_break_list;
+    statement_type_t m_statement_type;
     bool m_is_return = false;
+    
     Statement() = default;
     Statement(Statements*); // Statement -> LB Statements RB
     Statement(Type*, Node*); // Statement - >Type ID SC 
@@ -125,7 +143,8 @@ struct Statement : public Node{
     Statement(Call*); // Statement -> Call SC
     Statement(Node*); // //Statement -> RETURN SC | BREAK SC | CONTINUE SC
     Statement(Exp*); // Statement -> Return Exp SC
-    Statement(Node*, Exp*, IfWhileMarker*, Statement*); // Statement -> IF_WHILE LP Exp RP IfWhileMarker Statement
+    Statement(Exp*, IfWhileMarker*, Statement*); // Statement -> IF LP Exp RP IfWhileMarker Statement
+    Statement(WhileMarker*, Exp*, IfWhileMarker*, Statement*); // Statement -> WHILE LP WhileMarker Exp RP IfWhileMarker Statement
     Statement(Exp*, IfWhileMarker*, Statement*, ElseMarker*, Statement*); // Statement -> IF LP Exp RP IfWhileMarker Statement Else ElseMarker Statement
     // Statement(Node* WHILE, Exp*, Statement*);
     // Statement(Node* BREAK);
@@ -134,16 +153,17 @@ struct Statement : public Node{
     ~Statement() = default;
 };
 
-struct IfWhileMarker : public Node{
-    string m_label = "";
-    IfWhileMarker(string);
+struct IfWhileMarker : public Marker{
+    IfWhileMarker(string label) : Marker(label){}
 };
 
-struct ElseMarker  : public Node{
-    string m_label = "";
-    ElseMarker(string);
+struct ElseMarker  : public Marker{
+    ElseMarker(string label) : Marker(label){}
 };
 
+struct WhileMarker  : public Marker{
+    WhileMarker();
+};
 
 
 struct Call : public Node{

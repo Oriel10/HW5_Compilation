@@ -336,10 +336,10 @@ void llvmGen::genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& 
     return; 
 }
 
-void llvmGen::genUncondBranch(pair<int,BranchLabelIndex>& list_item)
+void llvmGen::genUncondBranch(pair<int,BranchLabelIndex>& list_item, string comment)
 {
     //br label @
-     int loc = llvmEmit("br label @");
+     int loc = llvmEmit("br label @", comment);
     list_item = {loc, BranchLabelIndex::FIRST};
     return;   
 }

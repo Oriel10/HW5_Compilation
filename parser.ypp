@@ -109,12 +109,12 @@ FormalDecl :
 Statements :
         Statement                               {PLOGD << prodRule(12);
                                                 $$ = new Statements(/*dynamic_cast<NextInstMarker*>($1),*/ dynamic_cast<Statement*>($1));             }
-    |   Statements NextInstMarker Statement    {PLOGD << prodRule(13);
+    |   Statements NextInstMarker Statement     {PLOGD << prodRule(13);
                                                 $$ = new Statements(dynamic_cast<Statements*>($1), dynamic_cast<NextInstMarker*>($2), dynamic_cast<Statement*>($3));             }
 ;
 
 NextInstMarker:
-        /*epsilon*/                             {PLOGD << prodRule(49); 
+        /*epsilon*/                             {PLOGD << prodRule(51); 
                                                 $$ = new NextInstMarker(CodeBuffer::instance().genLabel());}
 ;
 
@@ -136,18 +136,18 @@ Statement :
                                                 $$ = new Statement($1);         }
     |   RETURN Exp SC                          {PLOGD << prodRule(21);
                                                 $$ = new Statement(dynamic_cast<Exp*>($2));}
-    |   IF LPAREN BOOL_EXP RPAREN IfWhileMarker 
+    |   IF LPAREN BoolEXP RPAREN IfWhileMarker 
         Statement %prec IF                     {PLOGD << prodRule(22);
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6));
+                                                $$ = new Statement(dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6));
                                                 closeScope();                   }
-    |   IF LPAREN BOOL_EXP RPAREN IfWhileMarker 
-        Statement ELSE ElseMarker Statement    {PLOGD << prodRule(23);
+    |   IF LPAREN BoolEXP RPAREN IfWhileMarker
+         Statement ELSE ElseMarker Statement   {PLOGD << prodRule(23);
                                                 $$ = new Statement(dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6), dynamic_cast<ElseMarker*>($8), dynamic_cast<Statement*>($9));
                                                 closeScope();}
-    |   WHILE LPAREN BOOL_EXP RPAREN 
+    |   WHILE WhileMarker LPAREN BoolEXP RPAREN 
         IfWhileMarker {loop_counter++;}
         Statement                              {PLOGD << prodRule(24);
-                                                $$ = new Statement($1, dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($7));
+                                                $$ = new Statement(dynamic_cast<WhileMarker*>($2), dynamic_cast<Exp*>($4), dynamic_cast<IfWhileMarker*>($6), dynamic_cast<Statement*>($8));
                                                 closeScope(); loop_counter--;   }
     |   BREAK SC                               {PLOGD << prodRule(25);
                                                 $$ = new Statement($1);         }
@@ -162,15 +162,19 @@ IfWhileMarker :
                                                 openScope();                   }
 ;
 
+WhileMarker :
+        /*epsilon*/                            {PLOGD << prodRule(49);
+                                                $$ = new WhileMarker();}
+;
 
 ElseMarker :
-        /*epsilon*/                            {PLOGD << prodRule(49);
+        /*epsilon*/                            {PLOGD << prodRule(50);
                                                 $$ = new ElseMarker(CodeBuffer::instance().genLabel()); 
                                                 closeScope();                   
                                                 openScope();                     }
 ;
 
-BOOL_EXP :
+BoolEXP :
         Exp                                    {$$ = new Exp(dynamic_cast<Exp*>($1)); }
 ;
 

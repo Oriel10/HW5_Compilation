@@ -53,8 +53,10 @@ const std::string output::rules[] = {
     "Exp -> Exp OR Exp",
     "Exp -> Exp RELOP Exp",
     "Exp -> LPAREN Type RPAREN Exp",
-    "M -> Epsilone",
-    "M2 -> Epsilone" //49
+    "IfWhileMarker -> Epsilone",
+    "WhileMarker -> Epsilone",
+    "ElseMarker -> Epsilone",
+    "NextInstMarker -> Epsilone" //51
 };
 
 std::string output::prodRule(const int ruleno) {
