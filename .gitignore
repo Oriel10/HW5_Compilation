@@ -4,6 +4,6 @@ lex.yy.c
 tests/*.mine
 tests/*.llvm
 tests.sh
-log.txt
 tests/semantical_tests/hw3
 tests/*.ll
+tests/semantical_tests/log.txt

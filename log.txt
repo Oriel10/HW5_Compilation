@@ -1,0 +1,448 @@
+﻿2022-06-20 12:48:17.269 INFO  [18473] [startCompiler@26] Start compiler
+2022-06-20 12:48:17.272 INFO  [18473] [openScope@97] Open scope in line: 1
+2022-06-20 12:48:17.273 INFO  [18473] [llvmGen::genInitialFuncs@134] Generating intial functions
+2022-06-20 12:48:17.275 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: define void @printi(i32) {
+2022-06-20 12:48:17.275 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command:     %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.int_specifier, i32 0, i32 0
+2022-06-20 12:48:17.275 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command:     call i32 (i8*, ...) @printf(i8* %spec_ptr, i32 %0)
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command:     ret void
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: }
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: define void @print(i8*) {
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command:     %spec_ptr = getelementptr [4 x i8], [4 x i8]* @.str_specifier, i32 0, i32 0
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command:     call i32 (i8*, ...) @printf(i8* %spec_ptr, i8* %0)
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command:     ret void
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: }
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@194] line: 3,  Type -> BYTE
+2022-06-20 12:48:17.276 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.276 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@85] line: 3,  RetType -> Type
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@194] line: 3,  Type -> BYTE
+2022-06-20 12:48:17.276 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.276 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@105] line: 3,  FormalDecl -> Type ID
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@194] line: 3,  Type -> BYTE
+2022-06-20 12:48:17.276 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.276 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@105] line: 3,  FormalDecl -> Type ID
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@98] line: 3,  FormalsList -> FormalDecl
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@100] line: 3,  FormalsList -> FormalDecl COMMA FormalsList
+2022-06-20 12:48:17.276 DEBUG [18473] [yyparse@94] line: 3,  Formals -> FormalsList
+2022-06-20 12:48:17.276 INFO  [18473] [openScope@97] Open scope in line: 3
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::genFuncDecl@114] Generaing function declaration: "foo"
+2022-06-20 12:48:17.276 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: define i8 @foo(i8, i8) {
+2022-06-20 12:48:17.278 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %frame_ptr = alloca i32, i32 50
+2022-06-20 12:48:17.278 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.280 DEBUG [18473] [yyparse@194] line: 4,  Type -> BYTE
+2022-06-20 12:48:17.280 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.280 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.280 DEBUG [18473] [yyparse@207] line: 4,  Exp -> ID
+2022-06-20 12:48:17.280 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: x
+2022-06-20 12:48:17.280 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.280 INFO  [18473] [Exp::Exp@506] Register of x is: %0
+2022-06-20 12:48:17.281 DEBUG [18473] [yyparse@207] line: 4,  Exp -> ID
+2022-06-20 12:48:17.281 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: y
+2022-06-20 12:48:17.281 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.282 INFO  [18473] [Exp::Exp@506] Register of y is: %1
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@205] line: 4,  Exp -> Exp BINOP Exp
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var0 = add i8 %0, %1
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@127] line: 4,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: z, %var0
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var1 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::genGetElementPtr@172] %var1 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var2 = zext i8 %var0  to i32
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var2, i32* %var1
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@110] line: 4,  Statements -> Statement
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@117] line: 5,  M2 -> Epsilone
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@207] line: 5,  Exp -> ID
+2022-06-20 12:48:17.282 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: x
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.282 INFO  [18473] [Exp::Exp@506] Register of x is: %0
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@207] line: 5,  Exp -> ID
+2022-06-20 12:48:17.282 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: y
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.282 INFO  [18473] [Exp::Exp@506] Register of y is: %1
+2022-06-20 12:48:17.282 DEBUG [18473] [yyparse@205] line: 5,  Exp -> Exp BINOP Exp
+2022-06-20 12:48:17.282 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var3 = add i8 %0, %1
+2022-06-20 12:48:17.283 DEBUG [18473] [yyparse@131] line: 5,  Statement -> ID ASSIGN Exp SC
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: z, %var3
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var4 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::genGetElementPtr@172] %var4 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var5 = zext i8 %var3  to i32
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var5, i32* %var4
+2022-06-20 12:48:17.283 DEBUG [18473] [yyparse@112] line: 5,  Statements -> Statements Statement
+2022-06-20 12:48:17.283 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@117] line: 6,  M2 -> Epsilone
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@194] line: 6,  Type -> BYTE
+2022-06-20 12:48:17.286 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.286 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@207] line: 6,  Exp -> ID
+2022-06-20 12:48:17.286 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: x
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.286 INFO  [18473] [Exp::Exp@506] Register of x is: %0
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@127] line: 6,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: w, %0
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var6 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genGetElementPtr@172] %var6 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var7 = zext i8 %0  to i32
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var7, i32* %var6
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@112] line: 6,  Statements -> Statements Statement
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@117] line: 7,  M2 -> Epsilone
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@194] line: 7,  Type -> BYTE
+2022-06-20 12:48:17.286 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.286 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@207] line: 7,  Exp -> ID
+2022-06-20 12:48:17.286 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: w
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var8 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genGetElementPtr@172] %var8 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var9 = load i32, i32* %var8
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var10 = trunc i32 %var9 to i8
+2022-06-20 12:48:17.286 INFO  [18473] [Exp::Exp@506] Register of w is: %var10
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@127] line: 7,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: a, %var10
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var11 = getelementptr i32, i32* %frame_ptr, i32 2
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::genGetElementPtr@172] %var11 = getelementptr i32, i32* %frame_ptr, i32 2
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var12 = zext i8 %var10  to i32
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var12, i32* %var11
+2022-06-20 12:48:17.286 DEBUG [18473] [yyparse@112] line: 7,  Statements -> Statements Statement
+2022-06-20 12:48:17.286 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.287 DEBUG [18473] [yyparse@117] line: 8,  M2 -> Epsilone
+2022-06-20 12:48:17.287 DEBUG [18473] [yyparse@207] line: 8,  Exp -> ID
+2022-06-20 12:48:17.288 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: x
+2022-06-20 12:48:17.288 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.288 INFO  [18473] [Exp::Exp@506] Register of x is: %0
+2022-06-20 12:48:17.289 DEBUG [18473] [yyparse@207] line: 8,  Exp -> ID
+2022-06-20 12:48:17.290 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: y
+2022-06-20 12:48:17.293 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.293 INFO  [18473] [Exp::Exp@506] Register of y is: %1
+2022-06-20 12:48:17.293 DEBUG [18473] [yyparse@205] line: 8,  Exp -> Exp BINOP Exp
+2022-06-20 12:48:17.293 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var13 = add i8 %0, %1
+2022-06-20 12:48:17.293 DEBUG [18473] [yyparse@137] line: 8,  Statement -> RETURN Exp SC
+2022-06-20 12:48:17.293 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: ret i8 %var13
+2022-06-20 12:48:17.294 DEBUG [18473] [yyparse@112] line: 8,  Statements -> Statements Statement
+2022-06-20 12:48:17.294 DEBUG [18473] [yyparse@79] line: 9,  FuncDecl -> RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE
+2022-06-20 12:48:17.294 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: }
+
+2022-06-20 12:48:17.295 INFO  [18473] [closeScope@121] Close scope in line: 9
+2022-06-20 12:48:17.296 DEBUG [18473] [yyparse@87] line: 11,  RetType ->  VOID
+2022-06-20 12:48:17.296 DEBUG [18473] [yyparse@92] line: 11,  Formals -> epsilon
+2022-06-20 12:48:17.296 INFO  [18473] [openScope@97] Open scope in line: 12
+2022-06-20 12:48:17.297 INFO  [18473] [llvmGen::genFuncDecl@114] Generaing function declaration: "main"
+2022-06-20 12:48:17.297 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: define void @main() {
+2022-06-20 12:48:17.297 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %frame_ptr = alloca i32, i32 50
+2022-06-20 12:48:17.298 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.298 DEBUG [18473] [yyparse@192] line: 13,  Type -> INT
+2022-06-20 12:48:17.298 DEBUG [18473] [Type::Type@92] type->token_type: INT
+2022-06-20 12:48:17.298 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 2
+2022-06-20 12:48:17.298 DEBUG [18473] [yyparse@125] line: 13,  Statement -> Type ID SC
+2022-06-20 12:48:17.298 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: x, 
+2022-06-20 12:48:17.298 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.299 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var14 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.299 INFO  [18473] [llvmGen::genGetElementPtr@172] %var14 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.299 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 0, i32* %var14
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@110] line: 13,  Statements -> Statement
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@117] line: 14,  M2 -> Epsilone
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@192] line: 14,  Type -> INT
+2022-06-20 12:48:17.300 DEBUG [18473] [Type::Type@92] type->token_type: INT
+2022-06-20 12:48:17.300 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 2
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@211] line: 14,  Exp -> NUM
+2022-06-20 12:48:17.300 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 4
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var15 = add i32 4, 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::setReg@75] %var15 = add i32 4, 0
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@127] line: 14,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: w, %var15
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var16 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genGetElementPtr@172] %var16 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var15, i32* %var16
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@112] line: 14,  Statements -> Statements Statement
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@117] line: 15,  M2 -> Epsilone
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@211] line: 15,  Exp -> NUM
+2022-06-20 12:48:17.300 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 2
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var17 = add i32 2, 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::setReg@75] %var17 = add i32 2, 0
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@211] line: 15,  Exp -> NUM
+2022-06-20 12:48:17.300 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 3
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var18 = add i32 3, 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::setReg@75] %var18 = add i32 3, 0
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@229] line: 15,  Exp -> Exp RELOP Exp
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var19 = icmp sgt i32 %var17, %var18
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br i1 %var19, label @, label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@160] line: 15,  M -> Epsilone
+2022-06-20 12:48:17.300 INFO  [18473] [openScope@97] Open scope in line: 15
+2022-06-20 12:48:17.300 INFO  [18473] [openScope@97] Open scope in line: 15
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@213] line: 16,  Exp -> NUM B
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var20 = add i8 2, 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::setReg@75] %var20 = add i8 2, 0
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@131] line: 16,  Statement -> ID ASSIGN Exp SC
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var21 = zext i8 %var20  to i32
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: x, %var21
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var22 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genGetElementPtr@172] %var22 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var21, i32* %var22
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@110] line: 16,  Statements -> Statement
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@117] line: 17,  M2 -> Epsilone
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@211] line: 17,  Exp -> NUM
+2022-06-20 12:48:17.300 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 1
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var23 = add i32 1, 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::setReg@75] %var23 = add i32 1, 0
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@131] line: 17,  Statement -> ID ASSIGN Exp SC
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: w, %var23
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var24 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genGetElementPtr@172] %var24 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var23, i32* %var24
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@112] line: 17,  Statements -> Statements Statement
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@117] line: 18,  M2 -> Epsilone
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@135] line: 18,  Statement -> RETURN SC
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: ret void
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@112] line: 18,  Statements -> Statements Statement
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@122] line: 19,  Statement -> LBRACE Statements RBRACE
+2022-06-20 12:48:17.300 INFO  [18473] [Statement::Statement@220] Statement -> LB Statements RB
+2022-06-20 12:48:17.300 INFO  [18473] [closeScope@121] Close scope in line: 19
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@167] line: 20,  M2 -> Epsilone
+2022-06-20 12:48:17.300 INFO  [18473] [closeScope@121] Close scope in line: 20
+2022-06-20 12:48:17.300 INFO  [18473] [openScope@97] Open scope in line: 20
+2022-06-20 12:48:17.300 INFO  [18473] [openScope@97] Open scope in line: 20
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@213] line: 21,  Exp -> NUM B
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var25 = add i8 3, 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::setReg@75] %var25 = add i8 3, 0
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@131] line: 21,  Statement -> ID ASSIGN Exp SC
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var26 = zext i8 %var25  to i32
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: x, %var26
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var27 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genGetElementPtr@172] %var27 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var26, i32* %var27
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@110] line: 21,  Statements -> Statement
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@122] line: 22,  Statement -> LBRACE Statements RBRACE
+2022-06-20 12:48:17.300 INFO  [18473] [Statement::Statement@220] Statement -> LB Statements RB
+2022-06-20 12:48:17.300 INFO  [18473] [closeScope@121] Close scope in line: 22
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@144] line: 22,  Statement -> IF LPAREN Exp RPAREN Statement ELSE Statement
+2022-06-20 12:48:17.300 INFO  [18473] [closeScope@121] Close scope in line: 22
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@112] line: 22,  Statements -> Statements Statement
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@117] line: 23,  M2 -> Epsilone
+2022-06-20 12:48:17.300 DEBUG [18473] [yyparse@207] line: 23,  Exp -> ID
+2022-06-20 12:48:17.300 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: x
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.300 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var28 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genGetElementPtr@172] %var28 = getelementptr i32, i32* %frame_ptr, i32 0
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var29 = load i32, i32* %var28
+2022-06-20 12:48:17.301 INFO  [18473] [Exp::Exp@506] Register of x is: %var29
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@185] line: 23,  ExpList -> Exp
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@178] line: 23,  Call -> ID LPAREN ExpList RPAREN
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genCallFunc@276] Generating call function command of: printi
+2022-06-20 12:48:17.301 INFO  [18473] [SymbolTable::getFuncRetTypeAndArgsTypesByName@85] Looking for the return type of printi
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: call void @printi(i32 %var29)
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@133] line: 23,  Statement -> Call SC
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@112] line: 23,  Statements -> Statements Statement
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@117] line: 24,  M2 -> Epsilone
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@207] line: 24,  Exp -> ID
+2022-06-20 12:48:17.301 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: w
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var30 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genGetElementPtr@172] %var30 = getelementptr i32, i32* %frame_ptr, i32 1
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var31 = load i32, i32* %var30
+2022-06-20 12:48:17.301 INFO  [18473] [Exp::Exp@506] Register of w is: %var31
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@185] line: 24,  ExpList -> Exp
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@178] line: 24,  Call -> ID LPAREN ExpList RPAREN
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genCallFunc@276] Generating call function command of: printi
+2022-06-20 12:48:17.301 INFO  [18473] [SymbolTable::getFuncRetTypeAndArgsTypesByName@85] Looking for the return type of printi
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: call void @printi(i32 %var31)
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@133] line: 24,  Statement -> Call SC
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@112] line: 24,  Statements -> Statements Statement
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@117] line: 26,  M2 -> Epsilone
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@192] line: 26,  Type -> INT
+2022-06-20 12:48:17.301 DEBUG [18473] [Type::Type@92] type->token_type: INT
+2022-06-20 12:48:17.301 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 2
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@211] line: 26,  Exp -> NUM
+2022-06-20 12:48:17.301 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 0
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var32 = add i32 0, 0
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::setReg@75] %var32 = add i32 0, 0
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@127] line: 26,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: i, %var32
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var33 = getelementptr i32, i32* %frame_ptr, i32 2
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::genGetElementPtr@172] %var33 = getelementptr i32, i32* %frame_ptr, i32 2
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var32, i32* %var33
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@112] line: 26,  Statements -> Statements Statement
+2022-06-20 12:48:17.301 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.301 DEBUG [18473] [yyparse@117] line: 30,  M2 -> Epsilone
+2022-06-20 12:48:17.302 DEBUG [18473] [yyparse@207] line: 30,  Exp -> ID
+2022-06-20 12:48:17.303 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: i
+2022-06-20 12:48:17.303 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.305 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var34 = getelementptr i32, i32* %frame_ptr, i32 2
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::genGetElementPtr@172] %var34 = getelementptr i32, i32* %frame_ptr, i32 2
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var35 = load i32, i32* %var34
+2022-06-20 12:48:17.308 INFO  [18473] [Exp::Exp@506] Register of i is: %var35
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@185] line: 30,  ExpList -> Exp
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@178] line: 30,  Call -> ID LPAREN ExpList RPAREN
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::genCallFunc@276] Generating call function command of: printi
+2022-06-20 12:48:17.308 INFO  [18473] [SymbolTable::getFuncRetTypeAndArgsTypesByName@85] Looking for the return type of printi
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: call void @printi(i32 %var35)
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@133] line: 30,  Statement -> Call SC
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@112] line: 30,  Statements -> Statements Statement
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@117] line: 31,  M2 -> Epsilone
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@196] line: 31,  Type -> BOOL
+2022-06-20 12:48:17.308 DEBUG [18473] [Type::Type@92] type->token_type: BOOL
+2022-06-20 12:48:17.308 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 1
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@211] line: 31,  Exp -> NUM
+2022-06-20 12:48:17.308 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 4
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var36 = add i32 4, 0
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::setReg@75] %var36 = add i32 4, 0
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@211] line: 31,  Exp -> NUM
+2022-06-20 12:48:17.308 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 5
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var37 = add i32 5, 0
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::setReg@75] %var37 = add i32 5, 0
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@229] line: 31,  Exp -> Exp RELOP Exp
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var38 = icmp slt i32 %var36, %var37
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br i1 %var38, label @, label @
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@127] line: 31,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var39 = phi i1 [true, %label_119], [false, %label_121]
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: z, %var39
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var40 = getelementptr i32, i32* %frame_ptr, i32 3
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::genGetElementPtr@172] %var40 = getelementptr i32, i32* %frame_ptr, i32 3
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var41 = zext i1 %var39  to i32
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var41, i32* %var40
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@112] line: 31,  Statements -> Statements Statement
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@117] line: 32,  M2 -> Epsilone
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@194] line: 32,  Type -> BYTE
+2022-06-20 12:48:17.308 DEBUG [18473] [Type::Type@92] type->token_type: BYTE
+2022-06-20 12:48:17.308 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 0
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@213] line: 32,  Exp -> NUM B
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var42 = add i8 200, 0
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::setReg@75] %var42 = add i8 200, 0
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@127] line: 32,  Statement -> Type ID ASSIGN Exp SC
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: id, %var42
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var43 = getelementptr i32, i32* %frame_ptr, i32 4
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::genGetElementPtr@172] %var43 = getelementptr i32, i32* %frame_ptr, i32 4
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var44 = zext i8 %var42  to i32
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var44, i32* %var43
+2022-06-20 12:48:17.308 DEBUG [18473] [yyparse@112] line: 32,  Statements -> Statements Statement
+2022-06-20 12:48:17.308 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@117] line: 33,  M2 -> Epsilone
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@192] line: 33,  Type -> INT
+2022-06-20 12:48:17.309 DEBUG [18473] [Type::Type@92] type->token_type: INT
+2022-06-20 12:48:17.309 DEBUG [18473] [Type::Type@93] types_dict[type->token_type]: 2
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@125] line: 33,  Statement -> Type ID SC
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: f, 
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var45 = getelementptr i32, i32* %frame_ptr, i32 5
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::genGetElementPtr@172] %var45 = getelementptr i32, i32* %frame_ptr, i32 5
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 0, i32* %var45
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@112] line: 33,  Statements -> Statements Statement
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@117] line: 34,  M2 -> Epsilone
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@207] line: 34,  Exp -> ID
+2022-06-20 12:48:17.309 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: id
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var46 = getelementptr i32, i32* %frame_ptr, i32 4
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::genGetElementPtr@172] %var46 = getelementptr i32, i32* %frame_ptr, i32 4
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var47 = load i32, i32* %var46
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var48 = trunc i32 %var47 to i8
+2022-06-20 12:48:17.309 INFO  [18473] [Exp::Exp@506] Register of id is: %var48
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@131] line: 34,  Statement -> ID ASSIGN Exp SC
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var49 = zext i8 %var48  to i32
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::genStoreValInVar@252] Generating store command with: f, %var49
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var50 = getelementptr i32, i32* %frame_ptr, i32 5
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::genGetElementPtr@172] %var50 = getelementptr i32, i32* %frame_ptr, i32 5
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: store i32 %var49, i32* %var50
+2022-06-20 12:48:17.309 DEBUG [18473] [yyparse@112] line: 34,  Statements -> Statements Statement
+2022-06-20 12:48:17.309 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@117] line: 35,  M2 -> Epsilone
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@207] line: 35,  Exp -> ID
+2022-06-20 12:48:17.310 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: z
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::genGetVar@213] Generating genGetVar commands
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: 
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var51 = getelementptr i32, i32* %frame_ptr, i32 3
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::genGetElementPtr@172] %var51 = getelementptr i32, i32* %frame_ptr, i32 3
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var52 = load i32, i32* %var51
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var53 = trunc i32 %var52 to i1
+2022-06-20 12:48:17.310 INFO  [18473] [Exp::Exp@506] Register of z is: %var53
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br i1 %var53, label @, label @
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@160] line: 35,  M -> Epsilone
+2022-06-20 12:48:17.310 INFO  [18473] [openScope@97] Open scope in line: 35
+2022-06-20 12:48:17.310 INFO  [18473] [openScope@97] Open scope in line: 35
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@211] line: 36,  Exp -> NUM
+2022-06-20 12:48:17.310 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 1
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var54 = add i32 1, 0
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::setReg@75] %var54 = add i32 1, 0
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@185] line: 36,  ExpList -> Exp
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@178] line: 36,  Call -> ID LPAREN ExpList RPAREN
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::genCallFunc@276] Generating call function command of: printi
+2022-06-20 12:48:17.310 INFO  [18473] [SymbolTable::getFuncRetTypeAndArgsTypesByName@85] Looking for the return type of printi
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: call void @printi(i32 %var54)
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@133] line: 36,  Statement -> Call SC
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@110] line: 36,  Statements -> Statement
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@122] line: 37,  Statement -> LBRACE Statements RBRACE
+2022-06-20 12:48:17.310 INFO  [18473] [Statement::Statement@220] Statement -> LB Statements RB
+2022-06-20 12:48:17.310 INFO  [18473] [closeScope@121] Close scope in line: 37
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@167] line: 38,  M2 -> Epsilone
+2022-06-20 12:48:17.310 INFO  [18473] [closeScope@121] Close scope in line: 38
+2022-06-20 12:48:17.310 INFO  [18473] [openScope@97] Open scope in line: 38
+2022-06-20 12:48:17.310 INFO  [18473] [openScope@97] Open scope in line: 38
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@211] line: 39,  Exp -> NUM
+2022-06-20 12:48:17.310 INFO  [18473] [Exp::Exp@496] Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}: 0
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: %var55 = add i32 0, 0
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::setReg@75] %var55 = add i32 0, 0
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@185] line: 39,  ExpList -> Exp
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@178] line: 39,  Call -> ID LPAREN ExpList RPAREN
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::genCallFunc@276] Generating call function command of: printi
+2022-06-20 12:48:17.310 INFO  [18473] [SymbolTable::getFuncRetTypeAndArgsTypesByName@85] Looking for the return type of printi
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: call void @printi(i32 %var55)
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@133] line: 39,  Statement -> Call SC
+2022-06-20 12:48:17.310 DEBUG [18473] [yyparse@110] line: 39,  Statements -> Statement
+2022-06-20 12:48:17.310 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.311 DEBUG [18473] [yyparse@122] line: 40,  Statement -> LBRACE Statements RBRACE
+2022-06-20 12:48:17.311 INFO  [18473] [Statement::Statement@220] Statement -> LB Statements RB
+2022-06-20 12:48:17.311 INFO  [18473] [closeScope@121] Close scope in line: 40
+2022-06-20 12:48:17.311 DEBUG [18473] [yyparse@144] line: 40,  Statement -> IF LPAREN Exp RPAREN Statement ELSE Statement
+2022-06-20 12:48:17.311 INFO  [18473] [closeScope@121] Close scope in line: 40
+2022-06-20 12:48:17.312 DEBUG [18473] [yyparse@112] line: 40,  Statements -> Statements Statement
+2022-06-20 12:48:17.312 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: br label @
+2022-06-20 12:48:17.312 DEBUG [18473] [yyparse@117] line: 41,  M2 -> Epsilone
+2022-06-20 12:48:17.312 DEBUG [18473] [yyparse@135] line: 41,  Statement -> RETURN SC
+2022-06-20 12:48:17.313 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: ret void
+2022-06-20 12:48:17.313 DEBUG [18473] [yyparse@112] line: 41,  Statements -> Statements Statement
+2022-06-20 12:48:17.313 DEBUG [18473] [yyparse@79] line: 42,  FuncDecl -> RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE
+2022-06-20 12:48:17.313 INFO  [18473] [llvmGen::llvmEmit@100] Emitting command: }
+
+2022-06-20 12:48:17.313 INFO  [18473] [closeScope@121] Close scope in line: 42
+2022-06-20 12:48:17.313 DEBUG [18473] [yyparse@70] line: 45,  Funcs -> epsilon
+2022-06-20 12:48:17.313 DEBUG [18473] [yyparse@72] line: 45,  Funcs -> FuncDecl Funcs
+2022-06-20 12:48:17.313 DEBUG [18473] [yyparse@72] line: 45,  Funcs -> FuncDecl Funcs
+2022-06-20 12:48:17.313 DEBUG [18473] [yyparse@65] line: 45,  Program -> Funcs
+2022-06-20 12:48:17.313 INFO  [18473] [endCompiler@34] Print global buffer
+2022-06-20 12:48:17.313 INFO  [18473] [endCompiler@36] Print code buffer
+2022-06-20 12:48:17.314 INFO  [18473] [closeScope@121] Close scope in line: 45
+2022-06-20 12:48:17.315 INFO  [18473] [endCompiler@40] End compiler
