@@ -77,10 +77,10 @@ string llvmGen::setReg(const string& init_val, type_t val_type){
 }
 
 string llvmGen::genStringReg(const string& str){
-    string g_reg = getFreshRegister(true);
+    string g_reg = getFreshRegister("", true);
     int str_len = str.length();
-    string res = g_reg + " = constant [" + to_string(str_len-1) + " x i8] c\"" + str.substr(1,str.length()-2) + "\\00\"\n";
-    m_cb->emitGlobal(res);
+    string to_emit = g_reg + " = constant [" + to_string(str_len-1) + " x i8] c\"" + str.substr(1,str.length()-2) + "\\00\"\n";
+    m_cb->emitGlobal(to_emit);
     //maybe emit getelementptr here?
     return g_reg;
 }
@@ -90,9 +90,52 @@ string llvmGen::genBinop(const string& reg1, const string& op, const string& reg
     // %vari = op type %reg1, %reg2 
     //TODO: handle dev by 0 - create a label to deal with it?
     //%vari = op type %var1, %var2
-    string to_emit = res_reg + " = " + CFanToLlvmOPsMap[pair<string, type_t>(op, op_type)] + " " + reg1 + ", " + reg2; 
+
+    //genHandleDevByZero
+    if(op == "/"){
+        genHandleDevByZero(reg2, op_type);
+    }
+    string llvm_op = CFanToLlvmOPsMap[pair<string, type_t>(op, op_type)];
+    string to_emit = res_reg + " = " + llvm_op + " " + reg1 + ", " + reg2; 
     llvmEmit(to_emit);
     return res_reg;
+}
+
+void llvmGen::genHandleDevByZero(const string& divisor_reg, type_t divisor_type){
+    
+    string is_zero_reg = genCompare(divisor_reg, "==", "0", divisor_type);
+    pair<int,BranchLabelIndex> zero_list_item;
+    pair<int,BranchLabelIndex> nonzero_list_item;
+    genCondBranch(is_zero_reg, zero_list_item, nonzero_list_item);
+
+    vector<pair<int,BranchLabelIndex>> zero_list = m_cb->makelist(zero_list_item);
+    vector<pair<int,BranchLabelIndex>> nonzero_list = m_cb->makelist(nonzero_list_item);
+
+    auto zero_label = m_cb->genLabel();
+    m_cb->bpatch(zero_list, zero_label);
+
+    //add requested print&&exit to zero_label
+    vector<string> print_args;
+    string error_msg = "Error division by zero"; 
+    error_msg = error_msg + "\"";
+    error_msg = "\"" + error_msg;
+    string g_str_reg = genStringReg(error_msg);
+    string str_len = to_string(error_msg.length()-1);
+    string type = "[" + str_len + " x i8]";
+    string str_ptr_reg = genGetElementPtr(type, g_str_reg, 0, true);
+    print_args.push_back(str_ptr_reg);
+    genCallFunc("print", print_args);
+    
+    //TODO: check if need to add exit func to symbol table
+    llvmEmit("call void @exit(i32 0)");
+
+    std::pair<int, BranchLabelIndex> from_zero;
+    // std::pair<int, BranchLabelIndex> from_nonzero;
+    genUncondBranch(from_zero);
+
+    auto nonzero_label = m_cb->genLabel(); 
+    nonzero_list = m_cb->merge(nonzero_list, m_cb->makelist(from_zero));  
+    m_cb->bpatch(nonzero_list, nonzero_label);
 }
 
 int llvmGen::llvmEmit(const string& str, const string& comment) const
@@ -103,9 +146,16 @@ int llvmGen::llvmEmit(const string& str, const string& comment) const
     return m_cb->emit(getIdentation() + str + tab + comment_prefix + comment);
 }
 
-std::string llvmGen::getFreshRegister(bool is_global){
-    std::string res_reg = is_global ? "@var" : "%var";
-    res_reg += std::to_string(m_reg_num++);
+std::string llvmGen::getFreshRegister(const string& reg_name, bool is_global){
+    std::string res_reg;
+    if(reg_name == ""){
+        res_reg = is_global ? "@var" : "%var";
+        res_reg += std::to_string(m_reg_num++);
+    }
+    else{
+        res_reg = is_global ? ("@" + reg_name) : ("%" + reg_name);
+        res_reg += std::to_string(m_reg_num++);
+    }
     return res_reg;
 }
 
@@ -166,7 +216,7 @@ string llvmGen::genGetElementPtr(const string& type, const string& ptr_reg, unsi
         to_emit = res_reg + " = getelementptr i32, i32* " + ptr_reg + ", i32 " + to_string(offset);
     }
     else{//string usage
-        to_emit = res_reg + " = getelementptr " + type +", " + type + "*" + ptr_reg +  "i32 0, i32 " + to_string(offset);
+        to_emit = res_reg + " = getelementptr " + type +", " + type + "* " + ptr_reg +  " , i32 0, i32 " + to_string(offset);
     }
     llvmEmit(to_emit);
     PLOGI << to_emit;
@@ -290,6 +340,7 @@ string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
     
     if (ret_type == type_t::VOID_T){
         //%vari = call i32 @test(i32 2)
+        PLOGD<<"call " + CFanToLlvmTypesMap.at(ret_type) + " @" + funcName + "(" + sperated_args_list.str() + ")";
         llvmEmit("call " + CFanToLlvmTypesMap.at(ret_type) +
                     " @" + funcName + "(" + sperated_args_list.str() + ")");  
         return ""; //Souldn't be used         

@@ -620,12 +620,9 @@ Exp::Exp(Node* node){
         m_type = STRING_T;
         string g_str_reg = llvm_inst.genStringReg(node->lexeme);
         string str_len = to_string(node->lexeme.length()-1);
-        m_reg = llvm_inst.getFreshRegister();
         
         string emit_type = "[" + str_len + " x i8]";
-
-        string str_emit = m_reg + " = getelementptr [" + str_len + " x i8], [" + str_len + " x i8]* " + g_str_reg + ", i32 0, i32 0";
-        llvm_inst.llvmEmit(str_emit);
+        m_reg = llvm_inst.genGetElementPtr(emit_type, g_str_reg, 0, true);
     }
     else {
         assert(node->token_type == "TRUE" || node->token_type == "FALSE");

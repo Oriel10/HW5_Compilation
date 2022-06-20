@@ -27,11 +27,12 @@ public:
     void zeroIdentation();
     string getIdentation() const;
     
-    string getFreshRegister(bool is_global = false);
+    string getFreshRegister(const string& reg_name = "", bool is_global = false);
     string setReg(const string& init_val, type_t val_type);
 
     string genStringReg(const string& str);
     string genBinop(const string& reg1, const string& op, const string& reg2, type_t op_type);
+    void genHandleDevByZero(const string& reg, type_t divisor_type);
     void genInitialFuncs() const;
     void genFuncDecl(type_t RetType, const string& funcName, vector<type_t> argsTypes) const;
     
@@ -47,7 +48,7 @@ public:
     string genCompare(const string& reg1, const string& rel_op, const string& reg2, type_t op_type);
     void genCondBranch(const string& bool_reg, pair<int,BranchLabelIndex>& true_list_item,
                                            pair<int,BranchLabelIndex>& false_list_item);
-    void genUncondBranch(pair<int,BranchLabelIndex>& list_item,  string comment = "");
+    void genUncondBranch(pair<int,BranchLabelIndex>& list_item, string comment = "");
     
     /** genBoolExpVal
      * Based on trueList and falseList of boolean expression, the function

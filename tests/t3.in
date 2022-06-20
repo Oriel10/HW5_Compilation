@@ -1,27 +1,37 @@
 // simple test
 
-bool testOr(bool i, bool j, bool s){
-    if(i or j or s){
-        printi(10);
-    }
-    return true;
-}
+//bool testOr(bool i, bool j, bool s){
+//    if(i or j or s){
+//        printi(10);
+//    }
+//    return true;
+//}
 
-int testWhile(int i){
-    int j;
-    while(j < 10){
-        printi(i);
-        //break;
-        while(2>1){
-            break;
-            int idk = 2000;
-        }
-        j = j + 1;
-    }
-}
+//int testWhile(int i){
+//    int j;
+//    while(j < 10){
+//        printi(i);
+//        //break;
+//        while(2>1){
+//            break;
+//            int idk = 2000;
+//        }
+//        j = j + 1;
+//    }
+//}
 
 void main()
 {   
+    //print("hello");
+    int dividend = 3*5;
+    int divisor = 6-6;
+    print("dividend:");
+    printi(dividend);
+    print("divisor:");
+    printi(divisor);
+    int res = (dividend) / (divisor+3);
+    printi(res);
+
     //int z = 1;
     //int x = 2;
     //{
@@ -31,7 +41,7 @@ void main()
     //    //}
     //}
     //printi(z);
-    testOr(true, false, true);
+    //testOr(true, false, true);
     //bool i = false or testOr(true, false, true);
 
     return;
