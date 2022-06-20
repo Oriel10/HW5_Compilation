@@ -173,8 +173,10 @@ struct Exp : public Node{
     string m_reg;
     vector<pair<int,BranchLabelIndex>> m_true_list;
     vector<pair<int,BranchLabelIndex>> m_false_list;
+    
     Exp(Node*, Exp*, Node*); // Exp -> LP Exp RP
-    Exp(Exp*, Node* , Exp*); // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
+    Exp(Exp*, Node*, NextInstMarker*, Exp*); // Exp -> Exp * Exp, * in {AND, OR}
+    Exp(Exp*, Node*, Exp*); // Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, RELOP_EQ, RELOP_SIZE}
     Exp(Node*); // Exp -> *, * in {ID, NUM, STRING, TRUE, FALSE}
     Exp(Node*, Node*); // Exp -> NUM B
     Exp(Call*); // Exp -> Call

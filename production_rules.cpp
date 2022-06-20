@@ -235,7 +235,7 @@ Statement::Statement(Type* type, Node* id)
     //llvm generation
     llvm_inst.genStoreValInVar(id->lexeme, "", /*initial*/ true);
 }
-
+//bool x = e1 or e2
 // Statement -> Type ID ASSIGN Exp SC 
 Statement::Statement(Type* type, Node* id, Exp* exp)
 {
@@ -385,7 +385,16 @@ Exp::Exp(Call* call){
     ASSERT_ARG(call);
     lineno = call->lineno;
     m_type = call->m_type;
+    
+    //llvm generation
     m_reg = call->m_ret_reg;
+    if(m_type == BOOL_T){
+        pair<int,BranchLabelIndex> true_list_item, false_list_item;
+        llvm_inst.genCondBranch(m_reg, true_list_item, false_list_item);
+        m_true_list = CodeBuffer::makelist(true_list_item);
+        m_false_list = CodeBuffer::makelist(false_list_item);  
+    }
+    
 }
 
 // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝
@@ -416,7 +425,11 @@ Exp::Exp(Node* LP, Exp* other_exp, Node* RP){
     ASSERT_ARG(other_exp);
     lineno = other_exp->lineno;
     m_type = other_exp->m_type;
+
+    //llvm generation
     m_reg = other_exp->m_reg;
+    m_false_list = other_exp->m_false_list;
+    m_true_list = other_exp->m_true_list;
 }
 
 // Bool_Exp -> Exp
@@ -437,21 +450,38 @@ Exp::Exp(Exp* bool_exp){
     
 }
 
-// Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, AND, OR, RELOP_EQ, RELOP_SIZE}
-Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
+// Exp -> Exp * Exp, * in {AND, OR}
+Exp::Exp(Exp* exp1, Node* node, NextInstMarker* M, Exp* exp2)
 {
-    ASSERT_3ARGS(exp1, node, exp2);
+    ASSERT_4ARGS(exp1, node, M, exp2);
     lineno = exp2->lineno;
     if(node->token_type == "OR" || node->token_type == "AND"){
         m_type = BOOL_T;
         if(exp1->m_type != BOOL_T || exp2->m_type != BOOL_T){
             ERROR(output::errorMismatch(yylineno));            
         }
-
-        //llvm generation
         
+        //llvm generation
+        if(node->token_type == "OR"){
+            CodeBuffer::instance().bpatch(exp1->m_false_list, M->m_label);
+            m_true_list = CodeBuffer::merge(exp1->m_true_list, exp2->m_true_list);
+            m_false_list = exp2->m_false_list;
+        }
+        else{//"AND" case
+            CodeBuffer::instance().bpatch(exp1->m_true_list, M->m_label);
+            m_true_list = exp2->m_true_list;
+            m_false_list = CodeBuffer::merge(exp1->m_false_list, exp2->m_false_list);
+        }    
     }
-    else if(node->token_type == "RELOP_EQ" || node->token_type == "RELOP_SIZE"){
+    
+} 
+
+// Exp -> Exp * Exp, * in {BINOP_PLUSMINUS, BINOP_MULDIV, RELOP_EQ, RELOP_SIZE}
+Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
+{
+    ASSERT_3ARGS(exp1, node, exp2);
+    lineno = exp2->lineno;
+    if(node->token_type == "RELOP_EQ" || node->token_type == "RELOP_SIZE"){
         //semantic analysis
         m_type = BOOL_T;
         if(exp1->m_type != INT_T && exp1->m_type != BYTE_T){
@@ -486,7 +516,6 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
             m_type = INT_T;
             m_reg = llvm_inst.genBinop(exp1->m_reg, node->lexeme, exp2->m_reg, INT_T);
         }
-
     }
 } 
 
@@ -565,7 +594,10 @@ Exp::Exp(Type* type, Exp* exp){
     m_type = type->m_type;
 
     //llvm generation
+
     m_reg = llvm_inst.genCasting(exp->m_reg, exp->m_type, type->m_type);
+    m_true_list = exp->m_true_list;
+    m_false_list = exp->m_false_list;
 }
 
 // 𝐸𝑥𝑝 → 𝑁𝑂𝑇 𝐸𝑥p
@@ -576,6 +608,11 @@ Exp::Exp(Node* NOT, Exp* exp){
         ERROR(output::errorMismatch(yylineno));
     }
     m_type = exp->m_type;
+
+    //llvm generation
+
+    m_true_list = exp->m_false_list;
+    m_false_list = exp->m_true_list;
 }
 
 NextInstMarker::NextInstMarker(string label) : m_label(label){}

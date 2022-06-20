@@ -346,7 +346,6 @@ void llvmGen::genUncondBranch(pair<int,BranchLabelIndex>& list_item)
 
 string llvmGen::genBoolExpVal(const vector<pair<int,BranchLabelIndex>>& true_list, const vector<pair<int,BranchLabelIndex>>& false_list)
 {
-
     auto true_label = m_cb->genLabel();
     std::pair<int, BranchLabelIndex> from_true, from_false;
     genUncondBranch(from_true);
@@ -357,6 +356,6 @@ string llvmGen::genBoolExpVal(const vector<pair<int,BranchLabelIndex>>& true_lis
     auto end_list = m_cb->merge(m_cb->makelist(from_false), m_cb->makelist(from_true));
     m_cb->bpatch(end_list, m_cb->genLabel());
     auto bool_val_reg = getFreshRegister();
-    llvmEmit(bool_val_reg + " = phi i1 [true, %" + true_label + "], [false, %" + false_label + "]");
+    llvmEmit(bool_val_reg + " = phi i1 [1, %" + true_label + "], [0, %" + false_label + "]");
     return bool_val_reg;
 }

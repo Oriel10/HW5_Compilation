@@ -221,9 +221,9 @@ Exp :
     |   NOT Exp                                {PLOGD << prodRule(43);
                                                 $$ = new Exp($1, dynamic_cast<Exp*>($2));}
     |   Exp AND NextInstMarker Exp                            {PLOGD << prodRule(44);
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($4));}
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<NextInstMarker*>($3), dynamic_cast<Exp*>($4));}
     |   Exp OR NextInstMarker Exp                             {PLOGD << prodRule(45);
-                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($4));}
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<NextInstMarker*>($3), dynamic_cast<Exp*>($4));}
     |   Exp RELOP_EQ Exp                       {PLOGD << prodRule(46);
                                                 $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
     |   Exp RELOP_SIZE Exp                     {PLOGD << prodRule(46);

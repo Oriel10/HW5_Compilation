@@ -1,43 +1,46 @@
 // simple test
 
-byte foo(byte x, byte y){
-    byte z = x + y;
-    z = x + y;
-    byte w = x;
-    byte a = w;
-    return x + y;
+//byte foo(byte x, byte y){
+    //byte z = x + y;
+    //z = x + y;
+    //byte w = x;
+    //byte a = w;
+    //return x + y;
+//}
+
+bool testOr(bool i, bool j, bool s){
+    if(i){
+        printi(10);
+    }
+    return true;
 }
 
 void main()
 {   
-    int x;
-    int w = 4;
-    if (2 > 3){
-        x = 2b;
-        w = 1;
-        return;
-    }
-    else{
-        x = 3b;
-    }
-    printi(x);
-    printi(w);
-
-    int i = 0;
-    //while (i<10){
-    //    i = i+1;
+    bool i = false or testOr(true, false, true);
+    //bool j = not (bool)i;
+    //if(j){
+    //    printi(1000);
     //}
-    printi(i);
-    bool z = 4<5;
-    byte id = 200b;
-    int f;
-    f = id;
-    if(z){
-        printi(1);
-    }
-    else{
-        printi(0);
-    }
+
+    //bool x = false or testOr();
+    //if(x){
+    //    printi(100);
+    //}
+    //else{
+    //    printi(200);
+    //}
+    //if (4<5){
+    //    byte x2=3b;
+    //}
+    //byte id = 200b;
+    //int f;
+    //f = id;
+    //if(x){
+    //    printi(1);
+    //    return;
+    //}
+    //printi(0);
     return;
 }
 
