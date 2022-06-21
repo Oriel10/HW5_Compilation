@@ -11,6 +11,8 @@ clean:
 
 test:
 	cd tests && ./run_tests
+	echo "Running external tests"
+	cd tests/external_tests && ./run.sh
 
 semantical:
 	flex scanner.lex
