@@ -124,7 +124,6 @@ void llvmGen::genHandleDevByZero(const string& divisor_reg, type_t divisor_type)
     print_args.push_back(str_ptr_reg);
     genCallFunc("print", print_args);
     
-    //TODO: check if need to add exit func to symbol table
     llvmEmit("call void @exit(i32 0)");
 
     std::pair<int, BranchLabelIndex> from_zero;
@@ -282,7 +281,6 @@ string llvmGen::genGetVar(const string& varName)
         return var_value;
     }
     else{
-        // std::TODO: check string type
         string casted_reg = getFreshRegister();
         llvmEmit(casted_reg + " = trunc i32 " + var_value + " to " + CFanToLlvmTypesMap[varType]);
         return casted_reg;
@@ -359,7 +357,7 @@ string llvmGen::genCasting(const string& reg, type_t src_type, type_t dst_type)
         }
         auto casted_reg = getFreshRegister();
 
-        string cast_type =(src_type > dst_type) ? "trunc " : "zext ";
+        string cast_type = (src_type > dst_type) ? "trunc " : "zext ";
         // %vari = trunc i32 %varj to i8"
         llvmEmit(casted_reg + " = " + cast_type + CFanToLlvmTypesMap[src_type] + " " + reg + " "
                                          + " to " + CFanToLlvmTypesMap[dst_type]);

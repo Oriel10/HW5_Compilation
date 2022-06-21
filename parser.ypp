@@ -188,14 +188,18 @@ Call :
 ExpList :
         Exp                                    {PLOGD << prodRule(29);
                                                 $$ = new ExpList(dynamic_cast<Exp*>($1));}
-    |   Exp CommaMarker ExpList                {PLOGD << prodRule(30);
-                                                $$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<CommaMarker*>($2), dynamic_cast<ExpList*>($3));}
+    |   ExpComma ExpList                {PLOGD << prodRule(30);
+                                                $$ = new ExpList(dynamic_cast<ExpComma*>($1), dynamic_cast<ExpList*>($2));}
 ;
 
-CommaMarker :
+ExpComma :
+        Exp COMMA                               {PLOGD << prodRule(52);
+                                                $$ = new ExpComma(dynamic_cast<Exp*>($1));         }
+;
+/* CommaMarker :
         COMMA                                  {PLOGD << prodRule(52);
                                                 $$ = new CommaMarker();         }
-;
+; */
 
 Type :
         INT                                    {PLOGD << prodRule(31);

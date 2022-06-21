@@ -1,0 +1,83 @@
+int foo(int n) {
+	int j = 1;
+  int k = 10;
+	while(k > 0) {
+    k = k - 1;
+		if(j == n) {
+			break;
+		}
+		while(j < n) {
+			j = j * 2;
+			if(j == 2*n) {
+				break;
+			}
+			if(j == 4) {
+				continue;
+			}
+		}
+	}
+	return j;
+}
+
+void breakAssociation(int x) {
+    int i = 0;
+    while (i < x) {
+      if (x == 4) {
+        break;
+      }
+  		if (x != 0 and 4/x == 2) {
+        i = i +1;
+        printi(111);
+  			continue;
+  		}
+      print("X");
+	  
+	  if(i==4){
+	  	printi(4);
+		printi(3);
+	  }
+	  else if(i==3){
+		printi(3);
+	  }
+	  else if (i==5){
+	    printi(5);
+		printi(1000);
+	  }
+	  else{
+	  	printi(1000);
+	  }
+    //  switch (i) {
+  	//	case 4: printi(4); 
+    //    case 3: printi(3); break;
+    //    case 5: printi(5);
+  	//		default: printi(1000); break;
+      //}
+      i = i + 1;
+  		int someValue = foo(i);
+		if(someValue == 1){
+			printi(123);
+		}
+		else if(someValue == 2){
+			printi(456);
+			printi(789);
+		}
+		else if(someValue == 3){
+			printi(789);
+		}
+  		//switch (someValue) {
+  		//	case 1: printi(123); break;
+  		//	case 2: printi(456); 
+  		//	case 3: printi(789);
+  		//}
+    }
+}
+
+
+void main() {
+    breakAssociation(2);
+	  breakAssociation(4);
+    breakAssociation(1);
+    breakAssociation(3);
+    breakAssociation(7);
+    breakAssociation(10);
+}

@@ -45,6 +45,8 @@ struct Call;
 struct ExpList;
 struct Type;
 struct Exp;
+struct ExpComma;
+
 
 struct Node{
     string lexeme;
@@ -182,8 +184,13 @@ struct Call : public Node{
 struct ExpList : public Node{
     vector<Exp*> m_exp_list; 
     ExpList(Exp*); // ExpList -> Exp
-    ExpList(Exp*, CommaMarker* comma_marker, ExpList*); // ExpList -> Exp COMMA ExpList 
+    ExpList(ExpComma* expcomma_marker, ExpList*); // ExpList -> Exp COMMA ExpList 
     ~ExpList() = default;
+};
+
+struct ExpComma : public Node{
+    Exp* m_exp;
+    ExpComma(Exp* exp); // ExpComma -> Exp COMMA
 };
 
 struct Type : public Node{
@@ -218,6 +225,8 @@ struct Exp : public Node{
 
     ~Exp() = default;
 };
+
+
 
 
 

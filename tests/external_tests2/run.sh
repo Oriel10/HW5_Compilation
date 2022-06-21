@@ -5,7 +5,7 @@ ENDCOLOR="\e[0m"
 
 failed=0
 num_of_tests=0
-echo "--------------- Running External Tests ---------------"
+echo "--------------- Running External Tests 2 ---------------"
 # echo "Running dos2unix ..."
 ERROR=$(dos2unix * 2>&1 > /dev/null)
 if [[ $? != 0 ]] 
@@ -15,20 +15,12 @@ if [[ $? != 0 ]]
         echo -e "${RED}Exiting${ENDCOLOR}"
 		exit
 fi
-# echo "Compiling ..."
-# ERROR=$(make 2>&1 > /dev/null)
-# if [[ $? != 0 ]] 
-# 	then
-# 		echo -e "${RED}Problem with make:${ENDCOLOR}"
-#         echo "${ERROR}"
-#         echo -e "${RED}Exiting${ENDCOLOR}"
-# 		exit
-# fi
+
 for inFile in *.in
 do        
     echo -n "running test ${inFile%.in} ... "
-    ./../../hw5 < $inFile > ${inFile%.in}.ll && lli ${inFile%.in}.ll > ${inFile%.in}.out 2> /dev/null 
-    diff ${inFile%.in}.out ${inFile%.in}.myOut &> /dev/null
+    ./../../hw5 < $inFile > ${inFile%.in}.ll && lli ${inFile%.in}.ll > ${inFile%.in}.in.res 2> /dev/null 
+    diff ${inFile%.in}.in.res ${inFile%.in}.in.out &> /dev/null
     retval=$?
     if [ $retval -ne 0 ];
     then

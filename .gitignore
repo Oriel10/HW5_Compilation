@@ -8,3 +8,6 @@ tests/semantical_tests/hw3
 tests/*.ll
 tests/semantical_tests/log.txt
 tests/external_tests/*.ll
+tests/external_tests2/*.ll
+tests/external_tests2/*.in.res
+tests/external_tests/*.out

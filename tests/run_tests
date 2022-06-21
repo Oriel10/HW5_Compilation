@@ -1,22 +1,68 @@
 
-echo "--------------- Running Internal Tests ---------------"
-for file in `ls  | grep in | cut -d"." -f1`; 
-do
+# echo "--------------- Running Internal Tests ---------------"
+# for file in `ls  | grep in | cut -d"." -f1`; 
+# do
 
-	./../hw5 < ${file}.in > ${file}.ll
-	lli ${file}.ll > ${file}.mine
-	DIFF=$(diff $file.mine ${file}.out)
+# 	./../hw5 < ${file}.in > ${file}.ll
+# 	lli ${file}.ll > ${file}.mine
+# 	DIFF=$(diff $file.mine ${file}.out)
 		
-	if [ "$DIFF" == "" ] 
+# 	if [ "$DIFF" == "" ] 
+# 	then
+# 		echo "-- Test $file passed :D --"
+# 	else
+# 		echo "-- Test $file FAILED :'( --"
+# 		echo ">>>our output<<<: "
+# 		diff $file.mine ${file}.out
+# 		echo ">>>test output<<<: "
+# 		break
+# 	fi
+# done
+# echo ""
+# rm log.txt
+
+
+
+
+#!/usr/bin/bash
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+
+failed=0
+num_of_tests=0
+echo "--------------- Running Internal Tests ---------------"
+# echo "Running dos2unix ..."
+ERROR=$(dos2unix * 2>&1 > /dev/null)
+if [[ $? != 0 ]] 
 	then
-		echo "-- Test $file passed :D --"
-	else
-		echo "-- Test $file FAILED :'( --"
-		echo ">>>our output<<<: "
-		diff $file.mine ${file}.out
-		echo ">>>test output<<<: "
-		break
-	fi
+		echo -e "${RED}Problem with dos2unix${ENDCOLOR}"
+        echo "${ERROR}"
+        echo -e "${RED}Exiting${ENDCOLOR}"
+		exit
+fi
+
+for inFile in *.in
+do        
+    echo -n "running test ${inFile%.in} ... "
+    ./../hw5 < $inFile > ${inFile%.in}.ll && lli ${inFile%.in}.ll > ${inFile%.in}.mine 2> /dev/null 
+    diff ${inFile%.in}.mine ${inFile%.in}.out &> /dev/null
+    retval=$?
+    if [ $retval -ne 0 ];
+    then
+        failed=$[$failed+1]
+        echo -e "${RED}ERROR${ENDCOLOR}"
+    else
+        echo -e "${GREEN}PASSED${ENDCOLOR}"
+    fi
+    num_of_tests=$[$num_of_tests+1]
 done
-echo ""
+if [ $failed -ne 0 ];
+then
+    echo -e "Conclusion: ${RED}Failed${ENDCOLOR} ${failed} out of ${num_of_tests} tests"
+else
+    echo -e "Conclusion: ${GREEN}Passed all tests!${ENDCOLOR}"
+fi
 rm log.txt
+
+
