@@ -1,10 +1,10 @@
 
-echo "--------------- Running Tests ---------------"
+echo "--------------- Running Internal Tests ---------------"
 for file in `ls  | grep in | cut -d"." -f1`; 
 do
 
-	./../hw5 < ${file}.in > ${file}.llvm
-	lli ${file}.llvm > ${file}.mine
+	./../hw5 < ${file}.in > ${file}.ll
+	lli ${file}.ll > ${file}.mine
 	DIFF=$(diff $file.mine ${file}.out)
 		
 	if [ "$DIFF" == "" ] 

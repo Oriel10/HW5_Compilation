@@ -9,7 +9,7 @@
 
 using namespace std;
 
-enum type_t {BYTE_T, BOOL_T, INT_T, STRING_T, VOID_T};
+enum type_t {BOOL_T, BYTE_T, INT_T, STRING_T, VOID_T};
 enum symbol_type_t {VAR, FUNC, ARG};
 
 struct Dict{
@@ -61,9 +61,6 @@ struct SymbolTable{
     void addFuncEntry (const string& name, type_t ret_type, vector<type_t>& arg_types);
     void addVarEntry (const string& name, type_t type);
     void addArgEntry (const string& name, type_t type, int offset);
-    int getVarOffsetByName(const string& varName);
-    type_t getVarTypeByName(const string& varName);
-    pair<type_t, vector<type_t>> getFuncRetTypeAndArgsTypesByName(const string& funcName); 
 }; 
 
 void openScope();

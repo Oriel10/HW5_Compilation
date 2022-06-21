@@ -55,43 +55,6 @@ void SymbolTable::addArgEntry(const string& name, type_t type, int offset)
     m_entries.push_back(SymbolTableEntry(name, type, offset, symbol_type_t::ARG));    
 }
 
-int SymbolTable::getVarOffsetByName(const string& varName)
-{
-    PLOGI << "Getting offset of variable " + varName;
-    for (auto& entry : m_entries){
-        if (varName == entry.m_name){
-            PLOGI << "Offset of variable " << varName << " is: " << std::to_string(entry.m_offset);
-            return entry.m_offset;
-        }
-    }
-    PLOGF << "variable " + varName + " hasn't been found in symbol table";
-    return 0;
-}
-
-type_t SymbolTable::getVarTypeByName(const string& varName)
-{
-    PLOGI << "Looking for the type of variable " << varName;
-    for (auto& entry : m_entries){
-        if (varName == entry.m_name){
-            return entry.m_type;
-        }
-    }
-    PLOGF << "variable " + varName + " hasn't been found in symbol table";
-    return type_t::INT_T; //we shouldn't got here
-}
-
-pair<type_t, vector<type_t>> SymbolTable::getFuncRetTypeAndArgsTypesByName(const string& funcName)
-{
-    PLOGI << "Looking for the return type of " << funcName;
-    for (auto& entry : m_entries){
-        if (funcName == entry.m_name){
-            return {entry.m_ret_type, entry.m_args_types};
-        }
-    }
-    PLOGF << "func " + funcName + " hasn't been found in symbol table";
-    return {type_t::INT_T, vector<type_t>{}}; //we shouldn't got here
-}
-
 void openScope()
 {   
     PLOGI << "Open scope in line: " << yylineno;

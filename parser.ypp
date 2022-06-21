@@ -115,7 +115,7 @@ Statements :
 
 NextInstMarker:
         /*epsilon*/                             {PLOGD << prodRule(51); 
-                                                $$ = new NextInstMarker(CodeBuffer::instance().genLabel());}
+                                                $$ = new NextInstMarker();}
 ;
 
 Statement :
@@ -169,7 +169,7 @@ WhileMarker :
 
 ElseMarker :
         /*epsilon*/                            {PLOGD << prodRule(50);
-                                                $$ = new ElseMarker(CodeBuffer::instance().genLabel()); 
+                                                $$ = new ElseMarker(); 
                                                 closeScope();                   
                                                 openScope();                     }
 ;
@@ -188,8 +188,13 @@ Call :
 ExpList :
         Exp                                    {PLOGD << prodRule(29);
                                                 $$ = new ExpList(dynamic_cast<Exp*>($1));}
-    |   Exp COMMA ExpList                      {PLOGD << prodRule(30);
-                                                $$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<ExpList*>($3));}
+    |   Exp CommaMarker ExpList                {PLOGD << prodRule(30);
+                                                $$ = new ExpList(dynamic_cast<Exp*>($1), dynamic_cast<CommaMarker*>($2), dynamic_cast<ExpList*>($3));}
+;
+
+CommaMarker :
+        COMMA                                  {PLOGD << prodRule(52);
+                                                $$ = new CommaMarker();         }
 ;
 
 Type :

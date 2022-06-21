@@ -235,7 +235,10 @@ void llvmGen::zeroIdentation(){
 
 void llvmGen::closeFunc(Statements* statements){
     auto last_statement = statements->m_statement_list.back();
-    if(!last_statement->m_is_return){
+    if(last_statement->m_statement_type != RETURN_STATEMENT){
+        pair<int,BranchLabelIndex> next_list_item;
+        genUncondBranch(next_list_item);
+        last_statement->m_next_list = m_cb->merge(last_statement->m_next_list, m_cb->makelist(next_list_item));
         m_cb->bpatch(last_statement->m_next_list, m_cb->genLabel());
         SymbolTableEntry& curr_func = tables_stack[0].m_entries.back();
         if (curr_func.m_ret_type == type_t::VOID_T){
@@ -324,13 +327,11 @@ void llvmGen::genStoreValInVar(const string& varName , const string& src_reg, bo
 string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
 {
     PLOGI << "Generating call function command of: " << funcName;
-
-    auto& curr_table = tables_stack.front(); //global table
-    auto types_pair = curr_table.getFuncRetTypeAndArgsTypesByName(funcName);
-    type_t ret_type = types_pair.first;
-    auto& args_types = types_pair.second;
+    auto func_entry = findIdentifier(funcName);
+    assert(func_entry);
+    
     for (size_t i=0; i < args_regs.size(); i++){
-        args_regs[i].insert(0, CFanToLlvmTypesMap.at(args_types[i]) + " ");
+        args_regs[i].insert(0, CFanToLlvmTypesMap.at(func_entry->m_args_types[i]) + " ");
     }
 
     std::ostringstream sperated_args_list;
@@ -338,17 +339,16 @@ string llvmGen::genCallFunc(const string& funcName, vector<string> args_regs)
               args_regs.end(),
               std::experimental::make_ostream_joiner(sperated_args_list,", "));
     
-    if (ret_type == type_t::VOID_T){
+    if (func_entry->m_ret_type == type_t::VOID_T){
         //%vari = call i32 @test(i32 2)
-        PLOGD<<"call " + CFanToLlvmTypesMap.at(ret_type) + " @" + funcName + "(" + sperated_args_list.str() + ")";
-        llvmEmit("call " + CFanToLlvmTypesMap.at(ret_type) +
+        llvmEmit("call " + CFanToLlvmTypesMap.at(func_entry->m_ret_type) +
                     " @" + funcName + "(" + sperated_args_list.str() + ")");  
         return ""; //Souldn't be used         
     }
     else{
         string ret_val_reg = getFreshRegister();
         //call i32 @test(i32 2)
-        llvmEmit(ret_val_reg + " = call " + CFanToLlvmTypesMap.at(ret_type) +
+        llvmEmit(ret_val_reg + " = call " + CFanToLlvmTypesMap.at(func_entry->m_ret_type) +
                     " @" + funcName + "(" + sperated_args_list.str() + ")");
         return ret_val_reg;
     }

@@ -17,7 +17,3 @@ semantical:
 	bison -d parser.ypp
 	g++ -std=c++17 -o tests/semantical_tests/hw3 *.c *.cpp
 	cd tests/semantical_tests && ./run_semantical_tests
-
-do:
-	read TEST_NUM
-	echo "test num is: $(TEST_NUM)"

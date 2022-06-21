@@ -56,7 +56,8 @@ const std::string output::rules[] = {
     "IfWhileMarker -> Epsilone",
     "WhileMarker -> Epsilone",
     "ElseMarker -> Epsilone",
-    "NextInstMarker -> Epsilone" //51
+    "NextInstMarker -> Epsilone",
+    "CommaMarker -> Epsilone" //52
 };
 
 std::string output::prodRule(const int ruleno) {

@@ -40,6 +40,7 @@ struct NextInstMarker;
 struct IfWhileMarker;
 struct ElseMarker;
 struct WhileMarker;
+struct CommaMarker;
 struct Call;
 struct ExpList;
 struct Type;
@@ -109,7 +110,8 @@ struct FormalDecl : public Node{
 };
 
 struct NextInstMarker : public Marker{
-    NextInstMarker(string label) : Marker(label){}
+    vector<pair<int, BranchLabelIndex>> m_next_list;
+    NextInstMarker();
 };
 
 struct Statements : public Node{
@@ -125,14 +127,12 @@ struct Statements : public Node{
 };
 
 
-
 struct Statement : public Node{
     string m_label = ""; //start label for the statement 
     vector<pair<int,BranchLabelIndex>> m_next_list;
     vector<pair<int,BranchLabelIndex>> m_continue_list;
     vector<pair<int,BranchLabelIndex>> m_break_list;
     statement_type_t m_statement_type;
-    bool m_is_return = false;
     
     Statement() = default;
     Statement(Statements*); // Statement -> LB Statements RB
@@ -157,8 +157,13 @@ struct IfWhileMarker : public Marker{
     IfWhileMarker(string label) : Marker(label){}
 };
 
+struct CommaMarker : public Marker{
+    CommaMarker();
+};
+
 struct ElseMarker  : public Marker{
-    ElseMarker(string label) : Marker(label){}
+    vector<pair<int, BranchLabelIndex>> m_next_list;
+    ElseMarker();
 };
 
 struct WhileMarker  : public Marker{
@@ -175,10 +180,9 @@ struct Call : public Node{
 };
 
 struct ExpList : public Node{
-    vector<type_t> m_exp_list_types;
-    vector<string> m_exp_list_regs;
-    ExpList(Exp*); // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥p
-    ExpList(Exp*, ExpList*); // 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝 𝐶𝑂𝑀𝑀𝐴 𝐸𝑥𝑝𝐿𝑖𝑠 
+    vector<Exp*> m_exp_list; 
+    ExpList(Exp*); // ExpList -> Exp
+    ExpList(Exp*, CommaMarker* comma_marker, ExpList*); // ExpList -> Exp COMMA ExpList 
     ~ExpList() = default;
 };
 
@@ -191,6 +195,7 @@ struct Type : public Node{
 struct Exp : public Node{
     type_t m_type;
     string m_reg;
+    string m_label;
     vector<pair<int,BranchLabelIndex>> m_true_list;
     vector<pair<int,BranchLabelIndex>> m_false_list;
     

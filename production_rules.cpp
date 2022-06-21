@@ -123,7 +123,29 @@ FormalsList::FormalsList(FormalDecl* formal_decl, FormalsList* formal_decls)
     m_formal_decls.insert( m_formal_decls.end(), vec.begin(), vec.end());
 }
 
+// Formals -> FormalsList
 Formals::Formals(FormalsList* formal_list) : m_formal_decls(formal_list->m_formal_decls){}
+
+// ExpList -> Exp
+ExpList::ExpList(Exp* exp)
+{
+    ASSERT_ARG(exp);
+    lineno = exp->lineno;
+    m_exp_list.push_back(exp);
+}
+
+// ExpList -> Exp CommaMarker ExpList 
+ExpList::ExpList(Exp* exp, CommaMarker* comma_marker, ExpList* exp_list)
+{
+    ASSERT_3ARGS(exp, comma_marker, exp_list);
+    lineno = exp_list->lineno;
+
+    exp_list->m_exp_list.front()->m_label = comma_marker->m_label;
+
+    m_exp_list = exp_list->m_exp_list;
+    m_exp_list.insert(m_exp_list.begin(), exp);
+
+}
 
 // Call -> ID LPAREN ExpList RPAREN
 Call::Call(Node* func_id, ExpList* exp_list)
@@ -140,7 +162,7 @@ Call::Call(Node* func_id, ExpList* exp_list)
     m_type = id_p->m_ret_type;
 
     bool is_error = false;
-    if(exp_list->m_exp_list_types.size() != id_p->m_args_types.size()){
+    if(exp_list->m_exp_list.size() != id_p->m_args_types.size()){
         is_error = true;
     }
     vector<string> f_args_types_string;
@@ -148,8 +170,8 @@ Call::Call(Node* func_id, ExpList* exp_list)
         type_t curr_type = id_p->m_args_types[i]; 
         f_args_types_string.push_back(types_dict[curr_type]);
         type_t src_type = INT_T;
-        if(exp_list->m_exp_list_types.size() > i){
-            src_type = exp_list->m_exp_list_types[i];
+        if(exp_list->m_exp_list.size() > i){
+            src_type = exp_list->m_exp_list[i]->m_type;
         }
         type_t dst_type = id_p->m_args_types[i];
         if(!automaticCastValidity(dst_type, src_type)){
@@ -161,7 +183,26 @@ Call::Call(Node* func_id, ExpList* exp_list)
     }
 
     //llvm generation
-    m_ret_reg = llvm_inst.genCallFunc(func_id->lexeme, exp_list->m_exp_list_regs);
+
+    vector<string> reg_args;
+    vector<pair<int, BranchLabelIndex>> prev_loc_br;
+    for (auto exp : exp_list->m_exp_list){
+        CodeBuffer::instance().bpatch(prev_loc_br, exp->m_label);
+        prev_loc_br.clear();
+        if(exp->m_type == BOOL_T){
+            reg_args.push_back(llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list));
+            pair<int, BranchLabelIndex> item;
+            llvm_inst.genUncondBranch(item);
+            prev_loc_br = CodeBuffer::merge(prev_loc_br, CodeBuffer::makelist(item));
+        }
+        else{
+            reg_args.push_back(exp->m_reg);
+        }
+    }
+    if (!prev_loc_br.empty()){
+        CodeBuffer::instance().bpatch(prev_loc_br, CodeBuffer::instance().genLabel());
+    }
+    m_ret_reg = llvm_inst.genCallFunc(func_id->lexeme, reg_args);
 }
 
 // Call -> ID LP RP
@@ -188,16 +229,8 @@ Statements::Statements(Statement* statement)
     ASSERT_ARG(statement);
     m_statement_list.clear();
     m_statement_list.push_back(statement);
-    if(!(statement->m_statement_type == BLOCK_STATEMENT ||
-         statement->m_statement_type == RETURN_STATEMENT ||
-         statement->m_statement_type == IF_STATEMENT ||
-         statement->m_statement_type == WHILE_STATEMENT ||
-         statement->m_statement_type == BREAK_STATEMENT ||
-         statement->m_statement_type == CONTINUE_STATEMENT)){
-        pair<int,BranchLabelIndex> next_list_item;
-        llvm_inst.genUncondBranch(next_list_item);
-        statement->m_next_list = CodeBuffer::merge(statement->m_next_list, CodeBuffer::makelist(next_list_item));
-    }
+
+    //llvm generaion
     m_next_list = statement->m_next_list;
     m_break_list = statement->m_break_list;
     m_continue_list = statement->m_continue_list;
@@ -213,18 +246,6 @@ Statements::Statements(Statements* statements, NextInstMarker* nextinst_marker, 
     //Backpatching nextlist of statements with NextInstMarker's new label before the next statement.
     CodeBuffer::instance().bpatch(statements->m_next_list, nextinst_marker->m_label);
 
-    //If new statement isn't return, add branch command to the next statement and save the branch
-    //location into the nextList of statements.
-    if(!(statement->m_statement_type == BLOCK_STATEMENT ||
-         statement->m_statement_type == RETURN_STATEMENT ||
-         statement->m_statement_type == IF_STATEMENT ||
-         statement->m_statement_type == WHILE_STATEMENT ||
-         statement->m_statement_type == BREAK_STATEMENT ||
-         statement->m_statement_type == CONTINUE_STATEMENT)){
-        pair<int,BranchLabelIndex> next_list_item;
-        llvm_inst.genUncondBranch(next_list_item);
-        m_next_list = CodeBuffer::makelist(next_list_item);
-    }
     m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
     m_break_list = CodeBuffer::merge(statements->m_break_list, statement->m_break_list);
     m_continue_list = CodeBuffer::merge(statements->m_continue_list, statement->m_continue_list);
@@ -234,7 +255,6 @@ Statements::Statements(Statements* statements, NextInstMarker* nextinst_marker, 
 Statement::Statement(Statements* statements){
     //llvm generation
     m_statement_type = BLOCK_STATEMENT;
-    PLOGI<< "Statement -> LB Statements RB";
     m_next_list = statements->m_next_list;
     m_break_list = statements->m_break_list;
     m_continue_list = statements->m_continue_list;
@@ -337,6 +357,16 @@ Statement::Statement(Exp* bool_exp, IfWhileMarker* if_while_marker, Statement* s
     ASSERT_3ARGS(bool_exp, if_while_marker, statement);
     // llvm generation
     m_statement_type = IF_STATEMENT;
+    // if(!(statement->m_statement_type == BLOCK_STATEMENT ||
+    //      statement->m_statement_type == RETURN_STATEMENT ||
+    //      statement->m_statement_type == IF_STATEMENT ||
+    //      statement->m_statement_type == WHILE_STATEMENT ||
+    //      statement->m_statement_type == BREAK_STATEMENT ||
+    //      statement->m_statement_type == CONTINUE_STATEMENT)){
+    //     pair<int, BranchLabelIndex> next_list_item;
+    //     llvm_inst.genUncondBranch(next_list_item);
+    //     m_next_list = CodeBuffer::merge(m_next_list, CodeBuffer::makelist(next_list_item));
+    // }
     CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
     m_next_list = CodeBuffer::merge(m_next_list, bool_exp->m_false_list);
     m_next_list = CodeBuffer::merge(m_next_list, statement->m_next_list);
@@ -350,6 +380,17 @@ Statement::Statement(WhileMarker* while_marker, Exp* bool_exp, IfWhileMarker* if
     ASSERT_4ARGS(while_marker, bool_exp, if_while_marker, statement);
     // llvm generation
     m_statement_type = WHILE_STATEMENT;
+    // if(!(statement->m_statement_type == BLOCK_STATEMENT ||
+    //      statement->m_statement_type == RETURN_STATEMENT ||
+    //      statement->m_statement_type == IF_STATEMENT ||
+    //      statement->m_statement_type == WHILE_STATEMENT ||
+    //      statement->m_statement_type == BREAK_STATEMENT ||
+        //  statement->m_statement_type == CONTINUE_STATEMENT)){
+        PLOGI << "statement type is " << statement->m_statement_type;
+        pair<int, BranchLabelIndex> next_list_item;
+        llvm_inst.genUncondBranch(next_list_item, "jump to while condition");
+        statement->m_next_list = CodeBuffer::merge(statement->m_next_list, CodeBuffer::makelist(next_list_item));
+    // }
     CodeBuffer::instance().bpatch(statement->m_continue_list, while_marker->m_label);
     CodeBuffer::instance().bpatch(bool_exp->m_true_list, if_while_marker->m_label);
     CodeBuffer::instance().bpatch(statement->m_next_list, while_marker->m_label);
@@ -365,6 +406,10 @@ Statement::Statement(Exp* boo_exp, IfWhileMarker* if_marker, Statement* if_state
     ASSERT_5ARGS(boo_exp, if_marker, if_statement, else_marker, else_statement);
     // llvm generation
     m_statement_type = IFELSE_STATEMENT;
+    pair<int, BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item);
+    if_statement->m_next_list = CodeBuffer::merge(if_statement->m_next_list, else_marker->m_next_list);
+    else_statement->m_next_list = CodeBuffer::merge(else_statement->m_next_list, CodeBuffer::makelist(next_list_item));
     CodeBuffer::instance().bpatch(boo_exp->m_true_list, if_marker->m_label);
     CodeBuffer::instance().bpatch(boo_exp->m_false_list, else_marker->m_label);
     m_next_list = CodeBuffer::merge(m_next_list, if_statement->m_next_list);
@@ -382,7 +427,6 @@ Statement::Statement(Node* node){
         if(curr_func.m_ret_type != VOID_T){
             ERROR(output::errorMismatch(yylineno));
         }
-        m_is_return = true;
 
         //llvm generation
         llvm_inst.llvmEmit("ret void");
@@ -406,7 +450,6 @@ Statement::Statement(Node* node){
             ERROR(output::errorUnexpectedContinue(yylineno));
         }
 
-        //TODO: figure 
         // llvm generation
         llvm_inst.llvmEmit("", "Jumping to while condition(found continue)");
         pair<int, BranchLabelIndex> cont_list_item;
@@ -433,12 +476,13 @@ Statement::Statement(Exp* exp){
     if (exp->m_type == BOOL_T){
         exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
     }
-    m_is_return = true;
-    string to_emit = "ret " + CFanToLlvmTypesMap[exp->m_type] + " " +exp->m_reg;
+
+    string to_emit = "ret " + CFanToLlvmTypesMap[exp->m_type] + " " + 
+            llvm_inst.genCasting(exp->m_reg, exp->m_type, curr_func.m_ret_type);
     llvm_inst.llvmEmit(to_emit);
 }
 
-// 𝐸𝑥𝑝 → 𝐶𝑎𝑙𝑙
+// Exp -> Call
 Exp::Exp(Call* call){
     ASSERT_ARG(call);
     lineno = call->lineno;
@@ -453,38 +497,6 @@ Exp::Exp(Call* call){
         m_false_list = CodeBuffer::makelist(false_list_item);  
     }
     
-}
-
-// 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝
-ExpList::ExpList(Exp* exp)
-{
-    ASSERT_ARG(exp);
-    lineno = exp->lineno;
-    m_exp_list_types.push_back(exp->m_type);
-
-    //llvm generation
-    if(exp->m_type == BOOL_T){
-        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
-    }
-    m_exp_list_regs.push_back(exp->m_reg);
-}
-
-// 𝐸𝑥𝑝𝐿𝑖𝑠𝑡 → 𝐸𝑥𝑝 𝐶𝑂𝑀𝑀𝐴 𝐸𝑥𝑝𝐿𝑖𝑠𝑡
-ExpList::ExpList(Exp* exp, ExpList* exp_list)
-{
-    ASSERT_2ARGS(exp, exp_list);
-    lineno = exp_list->lineno;
-    m_exp_list_types.push_back(exp->m_type);
-    auto& tmp_vec1 = exp_list->m_exp_list_types;
-    m_exp_list_types.insert( m_exp_list_types.end(), tmp_vec1.begin(), tmp_vec1.end());
-
-    //llvm generation
-    if(exp->m_type == BOOL_T){
-        exp->m_reg = llvm_inst.genBoolExpVal(exp->m_true_list, exp->m_false_list);
-    }
-    m_exp_list_regs.push_back(exp->m_reg);
-    auto& tmp_vec2 = exp_list->m_exp_list_regs;
-    m_exp_list_regs.insert( m_exp_list_regs.end(), tmp_vec2.begin(), tmp_vec2.end());
 }
 
 // Exp -> LP Exp RP
@@ -558,6 +570,15 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
             ERROR(output::errorMismatch(yylineno));            
         }
 
+        if (exp1->m_type == INT_T && exp2->m_type == BYTE_T){
+            exp2->m_reg = llvm_inst.genCasting(exp2->m_reg, BYTE_T, INT_T);
+            exp2->m_type = INT_T;
+        }
+        if (exp1->m_type == BYTE_T && exp2->m_type == INT_T){
+            exp1->m_reg = llvm_inst.genCasting(exp1->m_reg, BYTE_T, INT_T);
+            exp1->m_type = INT_T;
+        }
+        
         //llvm generation
         m_reg = llvm_inst.genCompare(exp1->m_reg, node->lexeme, exp2->m_reg, exp1->m_type);
         pair<int,BranchLabelIndex> true_list_item, false_list_item;
@@ -577,12 +598,21 @@ Exp::Exp(Exp* exp1, Node* node, Exp* exp2)
         }
         if(exp1->m_type == BYTE_T && exp2->m_type == BYTE_T){
             m_type = BYTE_T;
-            m_reg = llvm_inst.genBinop(exp1->m_reg, node->lexeme, exp2->m_reg, BYTE_T);
         }
         else{
             m_type = INT_T;
-            m_reg = llvm_inst.genBinop(exp1->m_reg, node->lexeme, exp2->m_reg, INT_T);
         }
+
+        //llvm generation 
+        if (exp1->m_type == INT_T && exp2->m_type == BYTE_T){
+            exp2->m_reg = llvm_inst.genCasting(exp2->m_reg, BYTE_T, INT_T);
+            exp2->m_type = INT_T;
+        }
+        if (exp1->m_type == BYTE_T && exp2->m_type == INT_T){
+            exp1->m_reg = llvm_inst.genCasting(exp1->m_reg, BYTE_T, INT_T);
+            exp1->m_type = INT_T;
+        }
+        m_reg = llvm_inst.genBinop(exp1->m_reg, node->lexeme, exp2->m_reg, exp1->m_type);
     }
 } 
 
@@ -636,7 +666,7 @@ Exp::Exp(Node* node){
     }
 } 
 
-// 𝐸𝑥𝑝 → 𝑁𝑈𝑀 B
+// Exp → NUM B
 Exp::Exp(Node* node, Node* B)
 {
     ASSERT_2ARGS(node, B);
@@ -648,7 +678,7 @@ Exp::Exp(Node* node, Node* B)
     m_reg = llvm_inst.setReg(node->lexeme, BYTE_T);
 }
 
-// 𝐸𝑥𝑝 → 𝐿𝑃𝐴𝑅𝐸𝑁 𝑇𝑦𝑝𝑒 𝑅𝑃𝐴𝑅𝐸𝑁 𝐸𝑥p
+// Exp -> LP Type RP Exp
 Exp::Exp(Type* type, Exp* exp){
     ASSERT_2ARGS(type, exp);
     lineno = exp->lineno;
@@ -664,7 +694,7 @@ Exp::Exp(Type* type, Exp* exp){
     m_false_list = exp->m_false_list;
 }
 
-// 𝐸𝑥𝑝 → 𝑁𝑂𝑇 𝐸𝑥p
+// Exp → NOT Exp
 Exp::Exp(Node* NOT, Exp* exp){
     ASSERT_2ARGS(NOT, exp);
     lineno = exp->lineno;
@@ -679,9 +709,34 @@ Exp::Exp(Node* NOT, Exp* exp){
     m_false_list = exp->m_true_list;
 }
 
+// Markers
+ElseMarker::ElseMarker() : Marker(){
+    pair<int, BranchLabelIndex> list_item; 
+    llvm_inst.genUncondBranch(list_item);
+    m_label = CodeBuffer::instance().genLabel();
+    m_next_list = CodeBuffer::makelist(list_item);
+}
+
 WhileMarker::WhileMarker() : Marker(){
     pair<int, BranchLabelIndex> list_item; 
     llvm_inst.genUncondBranch(list_item, "Dummy branch to support while");
     m_label = CodeBuffer::instance().genLabel();
     CodeBuffer::instance().bpatch(CodeBuffer::makelist(list_item), m_label);
+}
+
+CommaMarker::CommaMarker() : Marker(){
+    pair<int, BranchLabelIndex> list_item; 
+    llvm_inst.genUncondBranch(list_item, "jump next exp in expList");
+    m_label = CodeBuffer::instance().genLabel();
+    CodeBuffer::instance().bpatch(CodeBuffer::makelist(list_item), m_label);    
+}
+
+NextInstMarker::NextInstMarker()
+{
+    Marker();
+    pair<int,BranchLabelIndex> next_list_item;
+    llvm_inst.genUncondBranch(next_list_item, "defalut jump at each statement's end to the next one");
+    m_next_list = CodeBuffer::makelist(next_list_item);
+    m_label = CodeBuffer::instance().genLabel();
+    CodeBuffer::instance().bpatch(m_next_list, m_label);
 }
