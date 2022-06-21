@@ -5,7 +5,8 @@ ENDCOLOR="\e[0m"
 
 failed=0
 num_of_tests=0
-echo "Running dos2unix ..."
+echo "--------------- Running External Tests ---------------"
+# echo "Running dos2unix ..."
 ERROR=$(dos2unix * 2>&1 > /dev/null)
 if [[ $? != 0 ]] 
 	then
@@ -44,5 +45,6 @@ then
 else
     echo -e "Conclusion: ${GREEN}Passed all tests!${ENDCOLOR}"
 fi
+rm log.txt
 
 

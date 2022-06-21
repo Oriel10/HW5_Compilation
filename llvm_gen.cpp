@@ -87,9 +87,6 @@ string llvmGen::genStringReg(const string& str){
 
 string llvmGen::genBinop(const string& reg1, const string& op, const string& reg2, type_t op_type){
     string res_reg = getFreshRegister();
-    // %vari = op type %reg1, %reg2 
-    //TODO: handle dev by 0 - create a label to deal with it?
-    //%vari = op type %var1, %var2
 
     //genHandleDevByZero
     if(op == "/"){
@@ -103,6 +100,7 @@ string llvmGen::genBinop(const string& reg1, const string& op, const string& reg
 
 void llvmGen::genHandleDevByZero(const string& divisor_reg, type_t divisor_type){
     
+    PLOGI << "Calling genHandleDevByZero function";
     string is_zero_reg = genCompare(divisor_reg, "==", "0", divisor_type);
     pair<int,BranchLabelIndex> zero_list_item;
     pair<int,BranchLabelIndex> nonzero_list_item;

@@ -7,3 +7,4 @@ tests.sh
 tests/semantical_tests/hw3
 tests/*.ll
 tests/semantical_tests/log.txt
+tests/external_tests/*.ll
