@@ -1,0 +1,263 @@
+%{
+    #include "production_rules.h"
+    #include "hw3_output.hpp"
+    
+    #include "semantic_analizer.h"
+    #include "llvm_gen.hpp"
+
+    using namespace std;
+    using namespace output;
+    extern void closeScope();
+
+    extern vector<SymbolTable> tables_stack;
+    extern vector<int> offsets_stack;
+    extern size_t loop_counter;
+    extern char* yytext;
+
+    extern int yylineno;
+    extern llvmGen& llvm_inst;
+    int yylex();
+    void yyerror(char const*);
+%}
+
+
+%token VOID
+%token INT
+%token BYTE
+%token B
+%token BOOL
+%token AUTO
+%token TRUE
+%token FALSE
+%token RETURN
+%token WHILE
+%token BREAK
+%token CONTINUE
+%token SC
+%token COMMA
+%token ID
+%token NUM
+%token STRING
+
+%token RBRACE
+%token LBRACE
+%token LPAREN
+%token RPAREN
+
+%right ASSIGN
+%left OR
+%left AND
+%left RELOP_EQ /*new*/
+%left RELOP_SIZE /*new*/
+%left BINOP_PLUSMINUS /*new*/
+%left BINOP_MULDIV /*new*/
+%nonassoc CAST_PREC
+%right NOT
+
+%right IF
+%right ELSE 
+
+
+
+%%
+
+Program :
+        {startCompiler();} Funcs               {
+                                                endCompiler();                 }
+;
+
+Funcs :
+        /*epsilon*/                            {
+                                                $$ = new Funcs();              }
+    |   FuncDecl Funcs                         {
+                                                $$ = new Funcs();              }
+; 
+
+FuncDecl :
+        RetType ID LPAREN Formals RPAREN LBRACE
+        {$$ = new FuncDecl(dynamic_cast<RetType*>($1), $2, dynamic_cast<Formals*>($4));} 
+        Statements RBRACE                      {
+                                                llvm_inst.closeFunc(dynamic_cast<Statements*>($8));
+                                                closeScope();                   }
+;
+
+RetType :
+        Type                                   {
+                                                $$ = new RetType(dynamic_cast<Type*>($1));}
+    |   VOID                                   {
+                                                $$ = new RetType($1);           }
+;
+
+Formals :
+        /*epsilon*/                            {
+                                                $$ = new Formals();             }        
+    |   FormalsList                            {
+                                                $$ = new Formals(dynamic_cast<FormalsList*>($1));}
+
+FormalsList :
+        FormalDecl                             {
+                                                $$ = new FormalsList(dynamic_cast<FormalDecl*>($1));       }
+    |   FormalDecl COMMA FormalsList           {
+                                                $$ = new FormalsList(dynamic_cast<FormalDecl*>($1), dynamic_cast<FormalsList*>($3));    }
+;
+
+FormalDecl :
+        Type ID                                {
+                                                $$ = new FormalDecl(dynamic_cast<Type*>($1), $2);    }
+;
+
+Statements :
+        Statement                               {
+                                                $$ = new Statements(/*dynamic_cast<NextInstMarker*>($1),*/ dynamic_cast<Statement*>($1));             }
+    |   Statements NextInstMarker Statement     {
+                                                $$ = new Statements(dynamic_cast<Statements*>($1), dynamic_cast<NextInstMarker*>($2), dynamic_cast<Statement*>($3));             }
+;
+
+NextInstMarker:
+        /*epsilon*/                             { 
+                                                $$ = new NextInstMarker();}
+;
+
+Statement :
+        LBRACE {openScope();} Statements RBRACE{
+                                                $$ = new Statement(dynamic_cast<Statements*>($3));
+                                                closeScope();                   }
+    |   Type ID SC                             {
+                                                $$ = new Statement(dynamic_cast<Type*>($1), $2);}
+    |   Type ID ASSIGN Exp SC                  { 
+                                                $$ = new Statement(dynamic_cast<Type*>($1), $2, dynamic_cast<Exp*>($4));}
+    |   AUTO ID ASSIGN Exp SC                  {
+                                                $$ = new Statement($1, $2, dynamic_cast<Exp*>($4));}
+    |   ID ASSIGN Exp SC                       {
+                                                $$ = new Statement($1, dynamic_cast<Exp*>($3));}
+    |   Call SC                                {
+                                                $$ = new Statement(dynamic_cast<Call*>($1));           }
+    |   RETURN SC                              {
+                                                $$ = new Statement($1);         }
+    |   RETURN Exp SC                          {
+                                                $$ = new Statement(dynamic_cast<Exp*>($2));}
+    |   IF LPAREN BoolEXP RPAREN IfWhileMarker 
+        Statement %prec IF                     {
+                                                $$ = new Statement(dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6));
+                                                closeScope();                   }
+    |   IF LPAREN BoolEXP RPAREN IfWhileMarker
+         Statement ELSE ElseMarker Statement   {
+                                                $$ = new Statement(dynamic_cast<Exp*>($3), dynamic_cast<IfWhileMarker*>($5), dynamic_cast<Statement*>($6), dynamic_cast<ElseMarker*>($8), dynamic_cast<Statement*>($9));
+                                                closeScope();}
+    |   WHILE WhileMarker LPAREN BoolEXP RPAREN 
+        IfWhileMarker {loop_counter++;}
+        Statement                              {
+                                                $$ = new Statement(dynamic_cast<WhileMarker*>($2), dynamic_cast<Exp*>($4), dynamic_cast<IfWhileMarker*>($6), dynamic_cast<Statement*>($8));
+                                                closeScope(); loop_counter--;   }
+    |   BREAK SC                               {
+                                                $$ = new Statement($1);         }
+    |   CONTINUE SC                            {
+                                                $$ = new Statement($1);         }                                 
+;
+
+
+IfWhileMarker :
+        /*epsilon*/                            {
+                                                $$ = new IfWhileMarker(CodeBuffer::instance().genLabel()); 
+                                                openScope();                   }
+;
+
+WhileMarker :
+        /*epsilon*/                            {
+                                                $$ = new WhileMarker();}
+;
+
+ElseMarker :
+        /*epsilon*/                            {
+                                                $$ = new ElseMarker(); 
+                                                closeScope();                   
+                                                openScope();                     }
+;
+
+BoolEXP :
+        Exp                                    {$$ = new Exp(dynamic_cast<Exp*>($1)); }
+;
+
+Call :
+        ID LPAREN ExpList RPAREN               {
+                                                $$ = new Call($1, dynamic_cast<ExpList*>($3));}
+    |   ID LPAREN RPAREN                       {
+                                                $$ = new Call($1);                   }
+;
+
+ExpList :
+        Exp                                    {
+                                                $$ = new ExpList(dynamic_cast<Exp*>($1));}
+    |   ExpComma ExpList                {
+                                                $$ = new ExpList(dynamic_cast<ExpComma*>($1), dynamic_cast<ExpList*>($2));}
+;
+
+ExpComma :
+        Exp COMMA                               {
+                                                $$ = new ExpComma(dynamic_cast<Exp*>($1));         }
+;
+/* CommaMarker :
+        COMMA                                  {
+                                                $$ = new CommaMarker();         }
+; */
+
+Type :
+        INT                                    {
+                                                $$ = new Type($1);              }
+    |   BYTE                                   {
+                                                $$ = new Type($1);              }
+    |   BOOL                                   {
+                                                $$ = new Type($1);              }
+;
+
+Exp :
+        LPAREN Exp RPAREN                      {
+                                                $$ = new Exp($1, dynamic_cast<Exp*>($2), $3);}
+    |   Exp BINOP_MULDIV Exp                   {
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp BINOP_PLUSMINUS Exp                {
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   ID                                     {
+                                                $$ = new Exp(($1));                 }
+    |   Call                                   {
+                                                $$ = new Exp(dynamic_cast<Call*>($1));}
+    |   NUM                                    {
+                                                $$ = new Exp($1);                   }
+    |   NUM B                                  {
+                                                $$ = new Exp($1, $2);               }
+    |   STRING                                 {
+                                                $$ = new Exp($1);                   }
+    |   TRUE                                   {
+                                                $$ = new Exp($1);                   }
+    |   FALSE                                  {
+                                                $$ = new Exp($1);                   }
+    |   NOT Exp                                {
+                                                $$ = new Exp($1, dynamic_cast<Exp*>($2));}
+    |   Exp AND NextInstMarker Exp                            {
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<NextInstMarker*>($3), dynamic_cast<Exp*>($4));}
+    |   Exp OR NextInstMarker Exp                             {
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<NextInstMarker*>($3), dynamic_cast<Exp*>($4));}
+    |   Exp RELOP_EQ Exp                       {
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   Exp RELOP_SIZE Exp                     {
+                                                $$ = new Exp(dynamic_cast<Exp*>($1), $2, dynamic_cast<Exp*>($3));}
+    |   LPAREN Type RPAREN
+         Exp %prec CAST_PREC                   {
+                                                $$ = new Exp(dynamic_cast<Type*>($2), dynamic_cast<Exp*>($4));}
+;
+
+%%
+
+int main()
+{
+    return yyparse();
+}
+
+void yyerror(char const* s){
+    if (yychar == YYUNDEF){
+        output::errorLex(yylineno);
+    }
+    else{
+        output::errorSyn(yylineno);
+    }
+}

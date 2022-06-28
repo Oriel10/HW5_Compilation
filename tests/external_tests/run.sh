@@ -45,6 +45,6 @@ then
 else
     echo -e "Conclusion: ${GREEN}Passed all tests!${ENDCOLOR}"
 fi
-rm log.txt
+rm -f log.txt
 
 

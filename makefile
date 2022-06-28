@@ -13,6 +13,7 @@ test:
 	cd tests && ./run_tests
 	cd tests/external_tests && ./run.sh
 	cd tests/external_tests2 && ./run.sh
+	cd tests/external_tests3 && python3 compile_and_run.py
 
 semantical:
 	flex scanner.lex
